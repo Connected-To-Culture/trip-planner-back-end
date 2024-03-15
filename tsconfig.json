@@ -22,7 +22,7 @@
   },
   "include": [
     "src/**/*.ts"
-  ],
+, "src/dBconfig/MongoDb.js"  ],
   "exclude": [
     "dist",
     "node_modules"
