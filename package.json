@@ -41,7 +41,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.4.0",
     "mongoose": "^8.2.1",
-    "nodemailer": "^6.9.3",
+    "nodemailer": "^6.9.12",
     "pino": "^8.8.0",
     "pino-pretty": "^10.0.0"
   }

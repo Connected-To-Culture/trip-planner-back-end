@@ -3,6 +3,7 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import User from '~/models/userModel';
 import bcryptjs from 'bcryptjs';
 import { connectToMongoose } from '~/dBconfig/MongoDb';
+import { sendEmail } from '~/helpers/mailer';
 type SignUpRequestBody = {
     firstname: string;
     lastname: string;
@@ -44,11 +45,15 @@ export default async function signUpHandler(app: FastifyInstance) {
             // Save new user to database
             const savedUser = await newUser.save();
 
+            const emailType = "VERIFY";
+            await sendEmail({ email, emailType, userId: savedUser._id });            
+
             // Send response
             return res.status(201).send({
                 success: true,
                 user: savedUser
             });
+           
         } catch (error) {
             console.error('Error in sign-up handler:', error);
             return res.status(500).send({
