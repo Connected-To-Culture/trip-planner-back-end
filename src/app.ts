@@ -6,7 +6,6 @@ import path from 'path';
 import 'dotenv/config';
 
 const port = Number(process.env.PORT) || 4000;
-
 const app = Fastify({
   logger: {
     transport: {
@@ -15,7 +14,6 @@ const app = Fastify({
   },
   ignoreTrailingSlash: true,
 });
-
 app.register(formBody);
 
 app.register(helmet, {
@@ -27,16 +25,13 @@ app.register(helmet, {
     },
   },
 });
-
 app.register(fastifyAutoload, {
   dir: path.join(__dirname, 'routes'),
   dirNameRoutePrefix: false,
 });
-
 app.setNotFoundHandler((req: FastifyRequest, reply: FastifyReply) => {
   reply.code(404).send({ error: 'Not Found' });
 });
-
 const start = async () => {
   try {
     await app.listen({ port });
