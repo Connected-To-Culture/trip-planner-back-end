@@ -108,5 +108,4 @@ cache/*.json
 
 .vs
 .DS_STORE
-
-.env
+.idea

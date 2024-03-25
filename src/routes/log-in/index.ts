@@ -1,13 +1,13 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import User from '~/models/userModel';
 import bcryptjs from 'bcryptjs';
-import jwt from "jsonwebtoken"
+import jwt from 'jsonwebtoken';
 import { connectToMongoose } from '~/dBconfig/MongoDb';
 type Body = {
     email: string;
     password: string;
-}
-connectToMongoose()
+};
+connectToMongoose();
 export default async (app: FastifyInstance) => {
     app.post('/login', async (req: FastifyRequest, res: FastifyReply) => {
         try {
@@ -40,8 +40,8 @@ export default async (app: FastifyInstance) => {
             // Respond with token
             return res.send({ message: 'Login successful', token });
         } catch (error) {
-            console.log(error)
-            return res.send(error)
+            console.log(error);
+            return res.send(error);
         }
     });
-}
+};
