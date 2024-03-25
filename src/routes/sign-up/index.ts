@@ -10,7 +10,7 @@ type SignUpRequestBody = {
     username: string;
     email: string;
     password: string;
-}
+};
 // Establish database connection
 connectToMongoose();
 export default async function signUpHandler(app: FastifyInstance) {
@@ -39,26 +39,26 @@ export default async function signUpHandler(app: FastifyInstance) {
                 lastname,
                 username,
                 email,
-                password: hashedPassword
+                password: hashedPassword,
             });
 
             // Save new user to database
             const savedUser = await newUser.save();
 
-            const emailType = "VERIFY";
-            await sendEmail({ email, emailType, userId: savedUser._id });            
+            const emailType = 'VERIFY';
+            await sendEmail({ email, emailType, userId: savedUser._id });
 
             // Send response
             return res.status(201).send({
                 success: true,
-                user: savedUser
+                user: savedUser,
             });
-           
+
         } catch (error) {
             console.error('Error in sign-up handler:', error);
             return res.status(500).send({
                 success: false,
-                error: 'An internal server error occurred'
+                error: 'An internal server error occurred',
             });
         }
     });

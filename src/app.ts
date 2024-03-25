@@ -4,42 +4,55 @@ import helmet from '@fastify/helmet';
 import { fastifyAutoload } from '@fastify/autoload';
 import path from 'path';
 import 'dotenv/config';
+import Cors from "@fastify/cors";
+import { registerGoogleOAuth2Provider } from './routes/auth';
 
 const port = Number(process.env.PORT) || 4000;
 const app = Fastify({
-  logger: {
-    transport: {
-      target: 'pino-pretty',
+    logger: {
+        transport: {
+            target: 'pino-pretty',
+        },
     },
-  },
-  ignoreTrailingSlash: true,
+    ignoreTrailingSlash: true,
 });
 app.register(formBody);
 
+registerGoogleOAuth2Provider(app);
+
 app.register(helmet, {
-  global: true,
-  contentSecurityPolicy: {
-    useDefaults: true,
-    directives: {
-      'img-src': ['https:', 'data:'],
+    global: true,
+    contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+            'img-src': ['https:', 'data:'],
+        },
     },
-  },
 });
+
+const corsOptions = {
+    origin: '*',
+};
+
+app.register(Cors, corsOptions);
+
 app.register(fastifyAutoload, {
-  dir: path.join(__dirname, 'routes'),
-  dirNameRoutePrefix: false,
+    dir: path.join(__dirname, 'routes'),
+    dirNameRoutePrefix: false,
 });
+
 app.setNotFoundHandler((req: FastifyRequest, reply: FastifyReply) => {
-  reply.code(404).send({ error: 'Not Found' });
+    reply.code(404).send({ error: 'Not Found' });
 });
+
 const start = async () => {
-  try {
-    await app.listen({ port });
-    console.log(`Server listening on port ${port}`);
-  } catch (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
+    try {
+        await app.listen({ port });
+        console.log(`Server listening on port ${port}`);
+    } catch (err) {
+        app.log.error(err);
+        process.exit(1);
+    }
 };
 
 start();
