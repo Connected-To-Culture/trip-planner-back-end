@@ -5,7 +5,7 @@ import { fastifyAutoload } from '@fastify/autoload';
 import path from 'path';
 import 'dotenv/config';
 import Cors from "@fastify/cors";
-import { registerGoogleOAuth2Provider } from './routes/auth';
+import { registerGoogleOAuth2Provider, registerFacebookOAuth2Provider } from './routes/auth';
 
 const port = Number(process.env.PORT) || 4000;
 const app = Fastify({
@@ -19,6 +19,7 @@ const app = Fastify({
 app.register(formBody);
 
 registerGoogleOAuth2Provider(app);
+registerFacebookOAuth2Provider(app);
 
 app.register(helmet, {
     global: true,
