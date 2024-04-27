@@ -1,7 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import OAuth2, { OAuth2Namespace } from '@fastify/oauth2';
 import * as process from 'process';
-import fetch from 'node-fetch';
 
 declare module 'fastify' {
     interface FastifyInstance {
@@ -53,7 +52,9 @@ export default async (app: FastifyInstance) => {
     app.get('/oauth2/google/callback',async function (request: FastifyRequest, reply: FastifyReply) {
         const { token } = await app.GoogleOAuth2.getAccessTokenFromAuthorizationCodeFlow(request);
 
-        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        const fetch = await import('node-fetch');
+
+        const userInfoResponse = await fetch.default('https://www.googleapis.com/oauth2/v2/userinfo', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token.access_token}`,
@@ -71,7 +72,9 @@ export default async (app: FastifyInstance) => {
     app.get('/oauth2/facebook/callback', async function (request: FastifyRequest, reply: FastifyReply) {
         const { token } = await app.FacebookOAuth2.getAccessTokenFromAuthorizationCodeFlow(request);
 
-        const userInfoResponse = await fetch('https://graph.facebook.com/me?fields=id,name,email', {
+        const fetch = await import('node-fetch');
+
+        const userInfoResponse = await fetch.default('https://graph.facebook.com/me?fields=id,name,email', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token.access_token}`,
