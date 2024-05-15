@@ -13,7 +13,7 @@ RUN npm install
 COPY . .
 
 # Set environment variable for MongoDB URL
-ENV MONGODB_URL="mongodb+srv://cluster0.kxipss1.mongodb.net/"
+ENV MONGODB_URL=$MONGODB_URI
 
 # Build the application
 RUN npm run build
