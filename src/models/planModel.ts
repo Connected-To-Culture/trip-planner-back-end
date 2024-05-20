@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+// we need to set values as required if needed
+ 
 const planSchema = new mongoose.Schema({
   tripName: String,
   tripStartDate: Date,

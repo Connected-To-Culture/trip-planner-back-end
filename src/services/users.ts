@@ -19,4 +19,4 @@ export const getOne = async (query: Record<string, any>) => {
 // DELETE 
 // PATCH 
 
-export * as userService from "./user";
+export * as userService from "./users";
