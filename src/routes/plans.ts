@@ -3,8 +3,10 @@ import { planController } from "~/controllers/plans";
 // Establish database connection
 
 export default async (app: FastifyInstance) => {
-
     app.get("/users", planController.getPlans);
+    // app.get("/users", planController.getPlan);
+    // app.get("/users", planController.getPlan);
+    // app.get("/users", planController.deletePlans);
 
 };
 

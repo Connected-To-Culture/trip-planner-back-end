@@ -6,9 +6,8 @@ import { planService } from "~/services/plans";
 export const getPlans = async (req: FastifyRequest, reply: FastifyReply) => {
     // todo 
     // where is the id of the plan comminng from ? 
-    
     try {
-        const plans = await planService.getAll();
+        const plans = await planService.getAll(query);
         if (!plans) {
             return reply.status(404).send({ message: "Plans not found" });
         }
