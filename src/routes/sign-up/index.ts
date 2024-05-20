@@ -21,7 +21,7 @@ export default async function signUpHandler(app: FastifyInstance) {
             if (!requestBody) {
                 return res.status(400).send({ message: 'Invalid request body' });
             }
-            const {username, email, password } = requestBody;
+            const { username, email, password } = requestBody;
             // Check if user already exists
             const existingUser = await User.findOne({ username });
             if (existingUser) {

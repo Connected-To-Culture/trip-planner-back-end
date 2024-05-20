@@ -3,7 +3,6 @@ import { connectToMongoose } from "~/dBconfig/MongoDb";
 import { Plan } from "~/models/planModel";
 
 // Establish database connection
-connectToMongoose();
 
 export default async (app: FastifyInstance) => {
   app.get("/user/plans", async (req: FastifyRequest, reply: FastifyReply) => {
