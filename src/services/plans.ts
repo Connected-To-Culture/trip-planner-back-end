@@ -15,4 +15,4 @@ export const create = async ()=>{
 
 };
 
-export * as planService from "./plans.ts";
+export * as planService from "./plans";

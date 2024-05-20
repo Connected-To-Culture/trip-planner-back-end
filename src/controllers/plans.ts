@@ -17,4 +17,4 @@ export const getPlans = async (req: FastifyRequest, reply: FastifyReply) => {
     }
 };
 
-export * as planController from "./plans.ts";
+export * as planController from "./plans";
