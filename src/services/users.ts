@@ -1,6 +1,6 @@
 import User from "~/models/userModel";
 
-// GET all user that machtes a query
+// GET all plans that matches the query 
 
 export const getAll = async (query: Record<string, any>) => {
     const users = await User.find(query);
