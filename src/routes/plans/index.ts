@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import test from "node:test";
 import { connectToMongoose } from "~/dBconfig/MongoDb";
 import { Plan } from "~/models/planModel";
 
@@ -7,8 +8,10 @@ connectToMongoose();
 
 export default async (app: FastifyInstance) => {
   app.get("/user/plans", async (req: FastifyRequest, reply: FastifyReply) => {
+  
     try {
-      const plans = await Plan.find({}, { _id: false, tripName: true });
+      const plans = await Plan.find({}, { _id: true, tripName: true,tripStartDate:true,tripEndDate:true,numOfTravelers:true,totalExpense:true });
+     
       if (!plans) {
         return reply.status(404).send({ message: "Plans not found" });
       }
