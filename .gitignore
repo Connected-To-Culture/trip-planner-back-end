@@ -109,3 +109,7 @@ cache/*.json
 .vs
 .DS_STORE
 .idea
+
+# Ignore service account JSON files
+xenon-heading-384913-05e73a337b15.json
+
