@@ -42,6 +42,12 @@ app.register(fastifyAutoload, {
     dirNameRoutePrefix: false,
 });
 
+// add route for chatbot
+import apiRoutes from './routes/api';
+
+app.register(apiRoutes, { prefix: '/api' });
+
+
 app.setNotFoundHandler((req: FastifyRequest, reply: FastifyReply) => {
     reply.code(404).send({ error: 'Not Found' });
 });
@@ -55,6 +61,9 @@ const start = async () => {
         process.exit(1);
     }
 };
+
+
+
 
 
 start();
