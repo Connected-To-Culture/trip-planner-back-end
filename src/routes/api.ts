@@ -14,7 +14,7 @@ interface DialogflowResponse {
 }
 
 export default async function apiRoutes(fastify: FastifyInstance) {
-    fastify.post('/chat', async (request: FastifyRequest<{ Body: ChatRequest }>, reply: FastifyReply) => {
+    fastify.post< { Body: ChatRequest }>('/chat', async (request, reply) => {
         console.log('Received chat request:', request.body);
         const { text, sessionId } = request.body;
 
@@ -22,11 +22,8 @@ export default async function apiRoutes(fastify: FastifyInstance) {
             const dfResponse = await detectIntent(text, sessionId) as DialogflowResponse;
             console.log('Dialogflow response:', dfResponse);
 
-            // Handling different response types
             if (dfResponse.responseMessages && dfResponse.responseMessages.length > 0) {
                 const firstResponse = dfResponse.responseMessages[0];
-
-                // Check for text responses and join them if they are in an array
                 if (firstResponse.text && firstResponse.text.text) {
                     reply.send({ reply: firstResponse.text.text.join(' ') });
                 } else {

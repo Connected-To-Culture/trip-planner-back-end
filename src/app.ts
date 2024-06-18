@@ -31,9 +31,15 @@ app.register(helmet, {
     },
 });
 
-const corsOptions = {
-    origin: '*',
-};
+// const corsOptions = {
+//     origin: '*',
+// };
+
+// Environment-specific CORS configuration
+const corsOptions = process.env.NODE_ENV === 'production'
+    ? { origin: ['https://example.com'] }  // Only allow specific origins in production
+    : { origin: '*' };  // Allow all origins in development
+
 
 app.register(Cors, corsOptions);
 
@@ -44,13 +50,18 @@ app.register(fastifyAutoload, {
 
 // add route for chatbot
 import apiRoutes from './routes/api';
-
 app.register(apiRoutes, { prefix: '/api' });
 
 
 app.setNotFoundHandler((req: FastifyRequest, reply: FastifyReply) => {
     reply.code(404).send({ error: 'Not Found' });
 });
+
+app.setErrorHandler((error, req, reply) => {
+    req.log.error(error);  // Log the error
+    reply.status(500).send({ error: 'Internal Server Error' });
+});
+
 
 const start = async () => {
     try {
