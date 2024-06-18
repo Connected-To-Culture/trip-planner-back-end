@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "backend": "cross-env NODE_ENV=development ts-node-dev -r tsconfig-paths/register --respawn --transpile-only --rs --inspect=0.0.0.0:9229 src/app.ts",
+    "backend": "cross-env NODE_ENV=development ts-node-dev -r tsconfig-paths/register --respawn --transpile-only --rs --inspect=5000 src/app.ts",
     "predev": "cross-env NODE_ENV=development ts-node src/bootstrap.ts",
     "dev": "npm run predev && npm run backend",
     "start": "node ./dist/src/bootstrap.js && node ./dist/src/app.js",
