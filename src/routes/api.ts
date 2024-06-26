@@ -42,3 +42,6 @@ export default async function apiRoutes(fastify: FastifyInstance) {
         reply.send({ message: 'Chat service is operational.' });
     });
 }
+
+
+}
