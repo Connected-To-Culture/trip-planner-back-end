@@ -21,7 +21,7 @@ export default async (app: FastifyInstance) => {
                 return reply.status(400).send({ message: 'Query parameter id or email is required' });
             }
 
-            const user = await User.findOne(query);
+            const user = await User.findOne(query).populate('survey');
             if (!user) {
                 return reply.status(404).send({ message: 'User not found' });
             }
