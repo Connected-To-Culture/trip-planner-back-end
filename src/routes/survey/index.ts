@@ -39,6 +39,23 @@ export default async (app: FastifyInstance) => {
         }
     });
 
+    // GET request to retrive a single survey by id
+    app.get('/survey/:id', async (req: FastifyRequest<{ Params: {id: string }}>, res: FastifyReply) => {
+        try {
+            const surveyID = req.params.id;
+
+            const survey = await Survey.findById(surveyID);
+
+            if (!survey) {
+                return res.status(404).send({ error: 'Survey not found' });
+            }
+
+            return res.send(survey);
+        } catch (error) {
+            console.error('Error finding survey', error);
+        }
+    });
+
     // PUT request to update an existing survey
     app.put('/survey/:id', async (req: FastifyRequest<{ Params: { id: string } }>, res: FastifyReply) => {
         try {
