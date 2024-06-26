@@ -3,11 +3,11 @@ import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
     firstname: {
         type: String,
-        required: [true, 'Please Provide a first name'], 
+        required: [true, 'Please Provide a first name'],
     },
     lastname: {
         type: String,
-        required: [true, 'Please Provide a LastName'], 
+        required: [true, 'Please Provide a LastName'],
     },
     username: {
         type: String,
@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema({
     forgotPasswordTokenExpiry: Date,
     verifyToken: String,
     verifyTokenExpiry: Date,
+    survey: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Survey',
+    },
 });
 
 const User = mongoose.models.users || mongoose.model('users', userSchema);
