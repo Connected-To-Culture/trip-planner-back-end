@@ -8,7 +8,8 @@ import Cors from '@fastify/cors';
 import {
     registerGoogleOAuth2Provider,
     registerFacebookOAuth2Provider,
-} from './routes/auth';
+} from './routes/oauth.routes';
+import { connectToMongoose } from '~/dBconfig/MongoDb';
 
 const app = Fastify({
     logger: {
@@ -18,6 +19,7 @@ const app = Fastify({
     },
     ignoreTrailingSlash: true,
 });
+connectToMongoose();
 
 // utility plugins
 app.register(formBody);
