@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import User from '~/models/userModel';
+import User from '~/models/user.models';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { sendEmail } from '~/helpers/mailer';
