@@ -2,10 +2,11 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import User from '~/models/user.models';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { sendEmail } from '~/utils/mailer.utils';
+import { sendEmail } from '~/utils/email.utils';
 import z from 'zod';
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { createToken } from '~/utils/auth.utils';
+import { verifyToken } from '~/hooks/auth.hooks';
 
 const plugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
@@ -41,13 +42,6 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
-  type SignUpRequestBody = {
-    firstname: string;
-    lastname: string;
-    username: string;
-    email: string;
-    password: string;
-  };
   app.post(
     '/auth/sign-up',
     {
@@ -77,13 +71,28 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
         }
       }
 
-      const emailType = 'VERIFY';
-      //await sendEmail({ email, emailType, userId: savedUser._id });
+      const verificationToken = createToken({ id: user._id, type: 'emailVerification' });
+      await sendEmail(
+        email,
+        'Trip Planner - Email Verification',
+        `<p>Click <a href="${process.env.DOMAIN}/auth/verify-email?token=${verificationToken}">here</a> to verify your email</p>`,
+      );
 
-      // Send response
       return res.status(201).send({
-        user,
         userToken: createToken({ id: user._id, type: 'user' }),
+      });
+    },
+  );
+
+  app.post(
+    '/auth/verify-email',
+    {
+      preHandler: verifyToken('emailVerification'),
+    },
+    async (req, res) => {
+      await User.findByIdAndUpdate(req.user.id, { isVerified: true });
+      return res.status(201).send({
+        userToken: createToken({ id: req.user.id, type: 'user' }),
       });
     },
   );
