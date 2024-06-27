@@ -9,7 +9,7 @@ import {
     registerGoogleOAuth2Provider,
     registerFacebookOAuth2Provider,
 } from './routes/oauth.routes';
-import { connectToMongoose } from '~/dBconfig/MongoDb';
+import { connectToMongoose } from '~/utils/db.utils';
 
 const app = Fastify({
     logger: {

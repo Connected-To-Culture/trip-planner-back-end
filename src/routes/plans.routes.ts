@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import test from 'node:test';
-import { connectToMongoose } from '~/dBconfig/MongoDb';
+import { connectToMongoose } from '~/utils/db.utils';
 import { Plan } from '~/models/plan.models';
 
 // Establish database connection
