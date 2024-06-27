@@ -25,7 +25,7 @@ const app = Fastify({
         },
     },
     ignoreTrailingSlash: true,
-});
+}).withTypeProvider<ZodTypeProvider>();
 connectToMongoose();
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
@@ -52,20 +52,20 @@ app.register(fastifyAutoload, {
 });
 registerGoogleOAuth2Provider(app);
 registerFacebookOAuth2Provider(app);
-app.withTypeProvider<ZodTypeProvider>().route({
-    method: 'POST',
-    url: '/',
+app.post(
+    '/',
     // Define your schema
-    schema: {
-        body: z.object({
-            email: z.string().min(4),
-        }),
+    {
+        schema: {
+            body: z.object({
+                email: z.string().min(4),
+            }),
+        },
     },
-    handler: (req, res) => {
-        throw Error('test');
+    (req, res) => {
         res.send(req.body.email);
     },
-});
+);
 
 // error handlers
 app.setNotFoundHandler((req: FastifyRequest, reply: FastifyReply) => {
@@ -77,7 +77,6 @@ app.setErrorHandler((error, request, reply) => {
         // validation error from zod => nicely format it
         return reply.status(400).send({
             name: error.name,
-            statusCode: error.statusCode,
             code: error.code,
             validationContext: error.validationContext,
             errors: error.errors,
@@ -89,7 +88,7 @@ app.setErrorHandler((error, request, reply) => {
     // respond with generic message if in prod
     const errorResponse =
         process.env.NODE_ENV === 'production'
-            ? { message: 'internal server error' }
+            ? { message: 'Internal Server Error' }
             : error;
     return reply.status(500).send(errorResponse);
 });
