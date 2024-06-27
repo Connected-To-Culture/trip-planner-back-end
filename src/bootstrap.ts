@@ -1,7 +1,7 @@
 import { promises as fsPromises } from 'node:fs';
 import path from 'node:path';
 
-import logger from './utils/logger';
+import logger from './utils/logger.utils';
 
 import tsconfig from '../tsconfig.json';
 
@@ -37,7 +37,7 @@ async function setupSymlinks(): Promise<void> {
                 await fsPromises.unlink(fullAlias);
             } catch (error) {
                 // May not be set already
-                //logger.error(error);
+                //loggerUtils.error(error);
             }
             try {
                 await fsPromises.symlink(sourcePath, fullAlias);
