@@ -10,7 +10,14 @@ import {
     registerFacebookOAuth2Provider,
 } from './routes/oauth.routes';
 import { connectToMongoose } from '~/utils/db.utils';
+import {
+    serializerCompiler,
+    validatorCompiler,
+    ZodTypeProvider,
+} from 'fastify-type-provider-zod';
+import z, { ZodError } from 'zod';
 
+// init app
 const app = Fastify({
     logger: {
         transport: {
@@ -20,6 +27,8 @@ const app = Fastify({
     ignoreTrailingSlash: true,
 });
 connectToMongoose();
+app.setValidatorCompiler(validatorCompiler);
+app.setSerializerCompiler(serializerCompiler);
 
 // utility plugins
 app.register(formBody);
@@ -43,23 +52,46 @@ app.register(fastifyAutoload, {
 });
 registerGoogleOAuth2Provider(app);
 registerFacebookOAuth2Provider(app);
+app.withTypeProvider<ZodTypeProvider>().route({
+    method: 'POST',
+    url: '/',
+    // Define your schema
+    schema: {
+        body: z.object({
+            email: z.string().min(4),
+        }),
+    },
+    handler: (req, res) => {
+        throw Error('test');
+        res.send(req.body.email);
+    },
+});
 
+// error handlers
 app.setNotFoundHandler((req: FastifyRequest, reply: FastifyReply) => {
     reply.code(404).send({ error: 'Not Found' });
 });
 
 app.setErrorHandler((error, request, reply) => {
-    // log server errors
-    if (error.statusCode === 500) {
-        app.log.error(error);
+    if (error instanceof ZodError) {
+        // validation error from zod => nicely format it
+        return reply.status(400).send({
+            name: error.name,
+            statusCode: error.statusCode,
+            code: error.code,
+            validationContext: error.validationContext,
+            errors: error.errors,
+        });
     }
 
-    // server error => respond with generic server error in prod => otherwise just respond with the full error
+    // server error => log it
+    app.log.error(error);
+    // respond with generic message if in prod
     const errorResponse =
-        error.statusCode === 500 && process.env.NODE_ENV! === 'production'
+        process.env.NODE_ENV === 'production'
             ? { message: 'internal server error' }
             : error;
-    return reply.status(error.statusCode).send(errorResponse);
+    return reply.status(500).send(errorResponse);
 });
 
 const start = async () => {

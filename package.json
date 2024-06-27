@@ -42,12 +42,14 @@
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.3.1",
     "fastify": "^4.26.2",
+    "fastify-type-provider-zod": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.4.0",
     "mongoose": "^8.2.1",
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.12",
     "pino": "^8.8.0",
-    "pino-pretty": "^10.0.0"
+    "pino-pretty": "^10.0.0",
+    "zod": "^3.23.8"
   }
 }
