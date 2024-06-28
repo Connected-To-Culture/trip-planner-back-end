@@ -1,11 +1,21 @@
 import mongoose from 'mongoose';
 
+// Schema definition
 const planSchema = new mongoose.Schema({
-  tripName: { type: String, required: true },
-  tripStartDate: Date,
-  tripEndDate: Date,
-  numOfTravelers: Number,
-  totalExpense: Number,
+  name: { type: String, required: true },
+  startDate: {
+    type: Date,
+  },
+  endDate: {
+    type: Date,
+  },
+  travellerCount: {
+    type: Number,
+  },
+  totalCost: {
+    type: Number,
+    default: 0,
+  },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 });
 

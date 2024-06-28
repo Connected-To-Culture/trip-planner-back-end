@@ -5,11 +5,16 @@ import { fastifyAutoload } from '@fastify/autoload';
 import path from 'path';
 import 'dotenv/config';
 import Cors from '@fastify/cors';
-import { registerGoogleOAuth2Provider, registerFacebookOAuth2Provider } from './routes/oauth.routes';
 import { connectToMongoose } from '~/utils/db.utils';
-import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
-import z, { ZodError } from 'zod';
-import auth from './routes/auth.routes.js';
+import {
+  serializerCompiler,
+  validatorCompiler,
+} from 'fastify-type-provider-zod';
+import { ZodError } from 'zod';
+import {
+  registerGoogleOAuth2Provider,
+  registerFacebookOAuth2Provider,
+} from './routes/oauth.routes';
 
 // init app
 const app = Fastify({
@@ -19,7 +24,7 @@ const app = Fastify({
     },
   },
   ignoreTrailingSlash: true,
-}).withTypeProvider<ZodTypeProvider>();
+});
 connectToMongoose();
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
@@ -66,7 +71,10 @@ app.setErrorHandler((error, request, reply) => {
   // server error => log it
   app.log.error(error);
   // respond with generic message if in prod
-  const errorResponse = process.env.NODE_ENV === 'production' ? { message: 'Internal Server Error' } : error;
+  const errorResponse =
+    process.env.NODE_ENV === 'production'
+      ? { message: 'Internal Server Error' }
+      : error;
   return reply.status(500).send(errorResponse);
 });
 

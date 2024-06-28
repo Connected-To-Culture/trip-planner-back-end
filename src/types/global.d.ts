@@ -1,5 +1,7 @@
+import { FastifyRequest } from 'fastify';
+
 declare module 'fastify' {
-  export interface FastifyRequest {
-    user?: any;
+  interface FastifyRequest {
+    user?: any; // Extend with your custom properties
   }
 }

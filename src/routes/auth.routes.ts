@@ -25,7 +25,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       schema: {
         body: z.object({
           email: z.string().email(),
-          password: z.string(),
+          password: z.string().min(1),
         }),
       },
     },
@@ -59,7 +59,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       schema: {
         body: z.object({
           email: z.string().email(),
-          password: z.string(),
+          password: z.string().min(1),
         }),
       },
     },
@@ -144,7 +144,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     {
       schema: {
         body: z.object({
-          password: z.string(),
+          password: z.string().min(1),
         }),
       },
       preHandler: verifyJwt(Jwt.ResetPassword),
