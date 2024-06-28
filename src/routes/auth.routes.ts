@@ -3,12 +3,12 @@ import jwt from 'jsonwebtoken';
 import { sendEmail } from '~/utils/email.utils';
 import z from 'zod';
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { verifyToken } from '~/hooks/auth.hooks';
-import { Token } from '~/types/auth.types';
+import { verifyJwt } from '~/hooks/auth.hooks';
+import { Jwt } from '~/types/auth.types';
 import bcryptjs from 'bcryptjs';
 
 // utils
-const createToken = (
+const createJwt = (
   payload: string | object | Buffer,
   expiresIn: string = '1d',
 ) => {
@@ -46,7 +46,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
 
       // respond with jwt
       return res.send({
-        token: createToken({ id: user._id, type: Token.User }),
+        jwt: createJwt({ id: user._id, type: Jwt.User }),
       });
     },
   );
@@ -79,15 +79,15 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       }
 
       // send email with link containing jwt => click link => call separate endpoint to verify email using that jwt
-      const token = createToken({ id: user._id, type: Token.VerifyEmail });
+      const jwt = createJwt({ id: user._id, type: Jwt.VerifyEmail });
       sendEmail(
         email,
         'Trip Planner - Email Verification',
-        `<p>Click <a href="${process.env.DOMAIN}/auth/verify-email?token=${token}">here</a> to verify your email</p>`,
+        `<p>Click <a href="${process.env.DOMAIN}/auth/verify-email?jwt=${jwt}">here</a> to verify your email</p>`,
       );
 
       return res.status(201).send({
-        token: createToken({ id: user._id, type: Token.User }),
+        jwt: createJwt({ id: user._id, type: Jwt.User }),
       });
     },
   );
@@ -95,12 +95,12 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/auth/verify-email',
     {
-      preHandler: verifyToken(Token.VerifyEmail),
+      preHandler: verifyJwt(Jwt.VerifyEmail),
     },
     async (req, res) => {
       await User.findByIdAndUpdate(req.user.id, { isVerified: true });
       return res.send({
-        token: createToken({ id: req.user.id, type: Token.User }),
+        jwt: createJwt({ id: req.user.id, type: Jwt.User }),
       });
     },
   );
@@ -119,11 +119,11 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       const isUserRegistered = await User.exists({ email });
       if (isUserRegistered) {
         // send email with link containing jwt => click link => call separate endpoint to verify email using that jwt
-        const token = createToken({ email, type: Token.ResetPassword });
+        const jwt = createJwt({ email, type: Jwt.ResetPassword });
         sendEmail(
           email,
           'Trip Planner - Reset Password',
-          `<p>Click <a href="${process.env.DOMAIN}/auth/reset-password?token=${token}">here</a> to verify your email</p>`,
+          `<p>Click <a href="${process.env.DOMAIN}/auth/reset-password?jwt=${jwt}">here</a> to verify your email</p>`,
         );
       }
 
@@ -141,7 +141,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
           password: z.string(),
         }),
       },
-      preHandler: verifyToken(Token.ResetPassword),
+      preHandler: verifyJwt(Jwt.ResetPassword),
     },
     async (req, res) => {
       const { email } = req.user;
@@ -153,7 +153,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       );
 
       res.send({
-        token: createToken({ id: req.user.id, type: Token.User }),
+        jwt: createJwt({ id: req.user.id, type: Jwt.User }),
       });
     },
   );

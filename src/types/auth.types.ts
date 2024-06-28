@@ -1,4 +1,4 @@
-export enum Token {
+export enum Jwt {
   User,
   VerifyEmail,
   ResetPassword,
