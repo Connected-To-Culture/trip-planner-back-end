@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { Token } from '~/types/auth.types.js';
+import { Token } from '~/types/auth.types';
 
 export const verifyToken = (requiredType = Token.User) => {
   return (req, res, done) => {

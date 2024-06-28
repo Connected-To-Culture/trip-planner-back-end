@@ -3,9 +3,20 @@ import jwt from 'jsonwebtoken';
 import { sendEmail } from '~/utils/email.utils';
 import z from 'zod';
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { createToken, hash } from '~/utils/auth.utils';
 import { verifyToken } from '~/hooks/auth.hooks';
-import { Token } from '~/types/auth.types.js';
+import { Token } from '~/types/auth.types';
+import bcryptjs from 'bcryptjs';
+
+// utils
+const createToken = (
+  payload: string | object | Buffer,
+  expiresIn: string = '1d',
+) => {
+  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn });
+};
+const hash = (s: string) => {
+  return bcryptjs.hash(s, 10);
+};
 
 const plugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
@@ -13,7 +24,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     {
       schema: {
         body: z.object({
-          email: z.string(),
+          email: z.string().email(),
           password: z.string(),
         }),
       },
@@ -21,27 +32,22 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     async (req, res) => {
       const { email, password } = req.body;
 
-      // Find user in the database
-      const user = await User.findOne({ email });
+      // get user with given email => no user => error
+      const user = await User.findOne({ email }).select('_id password');
       if (!user) {
-        return res.status(404).send({ error: 'User not found' });
+        return res.status(401).send({ error: 'Incorrect login details' });
       }
 
-      // Verify password
+      // password doesn't match => error
       const isMatch = await bcryptjs.compare(password, user.password);
       if (!isMatch) {
-        return res.status(401).send({ error: 'Incorrect password' });
+        return res.status(401).send({ error: 'Incorrect login details' });
       }
 
-      // Generate JWT token
-      const token = jwt.sign(
-        { id: user.id, email: user.email },
-        process.env.JWT_SECRET!,
-        { expiresIn: '1d' },
-      );
-
-      // Respond with token
-      return res.send({ message: 'Login successful', token });
+      // respond with jwt
+      return res.send({
+        token: createToken({ id: user._id, type: Token.User }),
+      });
     },
   );
 
@@ -81,7 +87,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       );
 
       return res.status(201).send({
-        userToken: createToken({ id: user._id, type: Token.User }),
+        token: createToken({ id: user._id, type: Token.User }),
       });
     },
   );
@@ -94,7 +100,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     async (req, res) => {
       await User.findByIdAndUpdate(req.user.id, { isVerified: true });
       return res.send({
-        userToken: createToken({ id: req.user.id, type: Token.User }),
+        token: createToken({ id: req.user.id, type: Token.User }),
       });
     },
   );
@@ -147,7 +153,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       );
 
       res.send({
-        userToken: createToken({ id: req.user.id, type: Token.User }),
+        token: createToken({ id: req.user.id, type: Token.User }),
       });
     },
   );
