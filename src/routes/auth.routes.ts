@@ -44,9 +44,11 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
         return res.status(401).send({ error: 'Incorrect login details' });
       }
 
+      const userId = user._id;
       // respond with jwt
       return res.send({
-        jwt: createJwt({ id: user._id, type: Jwt.User }),
+        jwt: createJwt({ id: userId, type: Jwt.User }),
+        userId,
       });
     },
   );
@@ -86,8 +88,10 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
         `<p>Click <a href="${process.env.DOMAIN}/auth/verify-email?jwt=${jwt}">here</a> to verify your email</p>`,
       );
 
+      const userId = user._id;
       return res.status(201).send({
-        jwt: createJwt({ id: user._id, type: Jwt.User }),
+        jwt: createJwt({ id: userId, type: Jwt.User }),
+        userId,
       });
     },
   );
@@ -99,8 +103,10 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, res) => {
       await User.findByIdAndUpdate(req.user.id, { isVerified: true });
+      const userId = req.user.id;
       return res.send({
-        jwt: createJwt({ id: req.user.id, type: Jwt.User }),
+        jwt: createJwt({ id: userId, type: Jwt.User }),
+        userId,
       });
     },
   );
@@ -147,13 +153,14 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       const { email } = req.user;
       const { password } = req.body;
 
-      await User.findOneAndUpdate(
+      const { _id: userId } = await User.findOneAndUpdate(
         { email },
         { password: await hash(password) },
-      );
+      ).select('_id');
 
       res.send({
-        jwt: createJwt({ id: req.user.id, type: Jwt.User }),
+        jwt: createJwt({ id: userId, type: Jwt.User }),
+        userId,
       });
     },
   );

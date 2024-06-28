@@ -15,6 +15,7 @@ export const verifyJwt = (requiredType = Jwt.User) => {
         type: Jwt;
       };
       const payload = jwt.verify(token, process.env.JWT_SECRET!) as Payload;
+      console.log(payload.type, requiredType);
       if (payload.type !== requiredType) {
         return res.code(401).send({ message: 'Invalid jwt type' });
       }
