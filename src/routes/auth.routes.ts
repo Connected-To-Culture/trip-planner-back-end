@@ -1,4 +1,3 @@
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import User from '~/models/user.models';
 import jwt from 'jsonwebtoken';
 import { sendEmail } from '~/utils/email.utils';
@@ -6,6 +5,7 @@ import z from 'zod';
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { createToken, hash } from '~/utils/auth.utils';
 import { verifyToken } from '~/hooks/auth.hooks';
+import { Token } from '~/types/auth.types.js';
 
 const plugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
@@ -73,7 +73,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       }
 
       // send email with link containing jwt => click link => call separate endpoint to verify email using that jwt
-      const token = createToken({ id: user._id, type: 'emailVerification' });
+      const token = createToken({ id: user._id, type: Token.VerifyEmail });
       sendEmail(
         email,
         'Trip Planner - Email Verification',
@@ -81,7 +81,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       );
 
       return res.status(201).send({
-        userToken: createToken({ id: user._id, type: 'user' }),
+        userToken: createToken({ id: user._id, type: Token.User }),
       });
     },
   );
@@ -89,12 +89,12 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/auth/verify-email',
     {
-      preHandler: verifyToken('emailVerification'),
+      preHandler: verifyToken(Token.VerifyEmail),
     },
     async (req, res) => {
       await User.findByIdAndUpdate(req.user.id, { isVerified: true });
       return res.send({
-        userToken: createToken({ id: req.user.id, type: 'user' }),
+        userToken: createToken({ id: req.user.id, type: Token.User }),
       });
     },
   );
@@ -113,7 +113,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       const isUserRegistered = await User.exists({ email });
       if (isUserRegistered) {
         // send email with link containing jwt => click link => call separate endpoint to verify email using that jwt
-        const token = createToken({ email, type: 'resetPassword' });
+        const token = createToken({ email, type: Token.ResetPassword });
         sendEmail(
           email,
           'Trip Planner - Reset Password',
@@ -135,7 +135,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
           password: z.string(),
         }),
       },
-      preHandler: verifyToken('resetPassword'),
+      preHandler: verifyToken(Token.ResetPassword),
     },
     async (req, res) => {
       const { email } = req.user;
@@ -146,7 +146,9 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
         { password: await hash(password) },
       );
 
-      res.send({ userToken: createToken({ id: req.user.id, type: 'user' }) });
+      res.send({
+        userToken: createToken({ id: req.user.id, type: Token.User }),
+      });
     },
   );
 };

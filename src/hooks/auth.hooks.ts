@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
+import { Token } from '~/types/auth.types.js';
 
-export const verifyToken = (requiredType = 'user') => {
+export const verifyToken = (requiredType = Token.User) => {
   return (req, res, done) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -11,7 +12,7 @@ export const verifyToken = (requiredType = 'user') => {
 
     try {
       type Payload = {
-        type: string;
+        type: Token;
       };
       const payload = jwt.verify(token, process.env.JWT_SECRET!) as Payload;
       if (payload.type !== requiredType) {
