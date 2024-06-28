@@ -1,4 +1,4 @@
-import User from '~/models/user.models';
+import { User } from '~/models/user.models';
 import jwt from 'jsonwebtoken';
 import { sendEmail } from '~/utils/email.utils';
 import z from 'zod';
