@@ -25,7 +25,6 @@ const app = Fastify({
   },
   ignoreTrailingSlash: true,
 });
-connectToMongoose();
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
 
@@ -54,7 +53,7 @@ registerFacebookOAuth2Provider(app);
 
 // error handlers
 app.setNotFoundHandler((req: FastifyRequest, reply: FastifyReply) => {
-  reply.code(404).send({ error: 'Not Found' });
+  reply.code(404).send({ message: 'Not Found' });
 });
 
 app.setErrorHandler((error, request, reply) => {
@@ -80,6 +79,7 @@ app.setErrorHandler((error, request, reply) => {
 
 const start = async () => {
   try {
+    connectToMongoose();
     const port = Number(process.env.PORT) || 4000;
     await app.listen({ port, host: '0.0.0.0' });
     console.log(`Server listening on port ${port}`);

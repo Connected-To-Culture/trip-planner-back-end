@@ -35,13 +35,13 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       // get user with given email => no user => error
       const user = await User.findOne({ email }).select('_id password');
       if (!user) {
-        return res.status(401).send({ error: 'Incorrect login details' });
+        return res.status(401).send({ message: 'Incorrect login details' });
       }
 
       // password doesn't match => error
       const isMatch = await bcryptjs.compare(password, user.password);
       if (!isMatch) {
-        return res.status(401).send({ error: 'Incorrect login details' });
+        return res.status(401).send({ message: 'Incorrect login details' });
       }
 
       const userId = user._id;
