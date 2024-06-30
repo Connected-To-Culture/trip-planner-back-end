@@ -11,10 +11,6 @@ import {
   validatorCompiler,
 } from 'fastify-type-provider-zod';
 import { ZodError } from 'zod';
-import {
-  registerGoogleOAuth2Provider,
-  registerFacebookOAuth2Provider,
-} from './routes/oauth.routes';
 
 // init app
 const app = Fastify({
@@ -48,8 +44,6 @@ app.register(fastifyAutoload, {
   dir: path.join(__dirname, 'routes'),
   dirNameRoutePrefix: false,
 });
-registerGoogleOAuth2Provider(app);
-registerFacebookOAuth2Provider(app);
 
 // error handlers
 app.setNotFoundHandler((req: FastifyRequest, reply: FastifyReply) => {

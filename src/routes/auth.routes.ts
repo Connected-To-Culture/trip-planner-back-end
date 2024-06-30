@@ -4,16 +4,12 @@ import { sendEmail } from '~/utils/email.utils';
 import z from 'zod';
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { verifyJwt } from '~/hooks/auth.hooks';
-import { Jwt } from '~/types/auth.types';
+import { JwtType, Provider } from '~/types/enums.types';
 import bcryptjs from 'bcryptjs';
+import { DUPLICATE_KEY_ERROR } from '~/constants';
+import { createJwt } from '~/utils/auth.utils';
 
-// utils
-const createJwt = (
-  payload: string | object | Buffer,
-  expiresIn: string = '1d',
-) => {
-  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn });
-};
+// util
 const hash = (s: string) => {
   return bcryptjs.hash(s, 10);
 };
@@ -32,23 +28,34 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     async (req, res) => {
       const { email, password } = req.body;
 
-      // get user with given email => no user => error
-      const user = await User.findOne({ email }).select('_id password');
+      // get user with given email
+      const user = await User.findOne({
+        email,
+      }).select('_id password');
+      // user with same email doesn't exist
       if (!user) {
-        return res.status(401).send({ message: 'Incorrect login details' });
+        return res.status(401).send({ message: 'Incorrect email' });
       }
 
-      // password doesn't match => error
+      // user with same email exists with different provider
+      if (user.provider !== Provider.Standard) {
+        return res.status(401).send({
+          message:
+            'User with same email already exists with a different provider',
+        });
+      }
+
+      // user with same email exists with standard login
+      // password doesn't match
       const isMatch = await bcryptjs.compare(password, user.password);
       if (!isMatch) {
-        return res.status(401).send({ message: 'Incorrect login details' });
+        return res.status(401).send({ message: 'Incorrect password' });
       }
 
-      const userId = user._id;
       // respond with jwt
       return res.send({
-        jwt: createJwt({ id: userId, type: Jwt.User }),
-        userId,
+        jwt: createJwt({ id: user._id, type: JwtType.User }),
+        userId: user._id,
       });
     },
   );
@@ -66,46 +73,47 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     async (req, res) => {
       const { email, password } = req.body;
 
-      let user;
-      try {
-        // save new user to mongo
-        user = await User.create({ email, password: await hash(password) });
-      } catch (err) {
-        // email has unique constraint => duplicate email => error will be thrown
-        const DUPLICATE_KEY_ERROR = 11000;
-        if (err.code === DUPLICATE_KEY_ERROR) {
-          return res
-            .status(409)
-            .send({ message: 'user with same email already exists' });
-        }
+      const user = await User.findOne({ email });
+      // user with same email doesn't exist => create new user
+      if (!user) {
+        const newUser = await User.create({
+          email,
+          password: await hash(password),
+        });
+
+        // send email with link containing jwt => click link => call POST /auth/verify-email in react to verify email using that jwt
+        const jwt = createJwt({ id: newUser.id, type: JwtType.VerifyEmail });
+        sendEmail(
+          email,
+          'Trip Planner - Email Verification',
+          `<p>Click <a href="${process.env.FRONTEND_BASE_URL}/auth/verify-email?jwt=${jwt}">here</a> to verify your email</p>`,
+        );
+
+        return res.status(201).send({
+          jwt: createJwt({ id: newUser.id, type: JwtType.User }),
+          userId: newUser.id,
+        });
       }
 
-      // send email with link containing jwt => click link => call separate endpoint to verify email using that jwt
-      const jwt = createJwt({ id: user._id, type: Jwt.VerifyEmail });
-      sendEmail(
-        email,
-        'Trip Planner - Email Verification',
-        `<p>Click <a href="${process.env.DOMAIN}/auth/verify-email?jwt=${jwt}">here</a> to verify your email</p>`,
-      );
-
-      const userId = user._id;
-      return res.status(201).send({
-        jwt: createJwt({ id: userId, type: Jwt.User }),
-        userId,
-      });
+      // user with same email exists (if it's with different provider let them know)
+      const message =
+        user.provider !== Provider.Standard
+          ? 'User with same email already exists with a different provider'
+          : 'User with same email already exists';
+      return res.status(409).send({ message });
     },
   );
 
   app.post(
     '/auth/verify-email',
     {
-      preHandler: verifyJwt(Jwt.VerifyEmail),
+      preHandler: verifyJwt(JwtType.VerifyEmail),
     },
     async (req, res) => {
       await User.findByIdAndUpdate(req.user.id, { isVerified: true });
       const userId = req.user.id;
       return res.send({
-        jwt: createJwt({ id: userId, type: Jwt.User }),
+        jwt: createJwt({ id: userId, type: JwtType.User }),
         userId,
       });
     },
@@ -125,11 +133,11 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       const isUserRegistered = await User.exists({ email });
       if (isUserRegistered) {
         // send email with link containing jwt => click link => call separate endpoint to verify email using that jwt
-        const jwt = createJwt({ email, type: Jwt.ResetPassword });
+        const jwt = createJwt({ email, type: JwtType.ResetPassword });
         sendEmail(
           email,
           'Trip Planner - Reset Password',
-          `<p>Click <a href="${process.env.DOMAIN}/auth/reset-password?jwt=${jwt}">here</a> to verify your email</p>`,
+          `<p>Click <a href="${process.env.FRONTEND_BASE_URL}/auth/reset-password?jwt=${jwt}">here</a> to verify your email</p>`,
         );
       }
 
@@ -147,7 +155,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
           password: z.string().min(1),
         }),
       },
-      preHandler: verifyJwt(Jwt.ResetPassword),
+      preHandler: verifyJwt(JwtType.ResetPassword),
     },
     async (req, res) => {
       const { email } = req.user;
@@ -159,7 +167,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       ).select('_id');
 
       res.send({
-        jwt: createJwt({ id: userId, type: Jwt.User }),
+        jwt: createJwt({ id: userId, type: JwtType.User }),
         userId,
       });
     },

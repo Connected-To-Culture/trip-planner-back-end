@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
-import { Jwt } from '~/types/auth.types';
+import { JwtType } from '~/types/enums.types';
 
-export const verifyJwt = (requiredType = Jwt.User) => {
+export const verifyJwt = (requiredType = JwtType.User) => {
   return (req, res, done) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -12,7 +12,7 @@ export const verifyJwt = (requiredType = Jwt.User) => {
 
     try {
       type Payload = {
-        type: Jwt;
+        type: JwtType;
       };
       const payload = jwt.verify(token, process.env.JWT_SECRET!) as Payload;
       console.log(payload.type, requiredType);

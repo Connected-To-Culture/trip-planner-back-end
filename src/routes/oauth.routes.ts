@@ -1,92 +1,101 @@
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import OAuth2, { OAuth2Namespace } from '@fastify/oauth2';
+import oauthPlugin from '@fastify/oauth2';
 import * as process from 'process';
+import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import axios from 'axios';
+import { User } from '~/models/user.models';
+import { hash } from 'bcryptjs';
+import { DUPLICATE_KEY_ERROR } from '~/constants';
+import { JwtType, Provider } from '~/types/enums.types';
+import { createJwt } from '~/utils/auth.utils';
 
-declare module 'fastify' {
-    interface FastifyInstance {
-        GoogleOAuth2: OAuth2Namespace;
-        FacebookOAuth2: OAuth2Namespace;
-
-        // apple needs purchase $99/year
-    }
-}
-
-const googleOAuth2Options = {
-    name: 'GoogleOAuth2',
+const plugin: FastifyPluginAsyncZod = async (app) => {
+  // register google oauth
+  app.register(oauthPlugin, {
+    name: 'googleOAuth2',
     scope: ['profile', 'email'],
     credentials: {
-        client: {
-            id: process.env.GOOGLE_CLIENT_ID,
-            secret: process.env.GOOGLE_CLIENT_SECRET,
-        },
-        auth: OAuth2.GOOGLE_CONFIGURATION,
+      client: {
+        id: process.env.GOOGLE_CLIENT_ID,
+        secret: process.env.GOOGLE_CLIENT_SECRET,
+      },
+      auth: oauthPlugin.GOOGLE_CONFIGURATION,
     },
-    startRedirectPath: '/oauth2/google',
-    callbackUri: 'http://localhost:8000/oauth2/google/callback',
-};
+    startRedirectPath: '/oauth/google',
+    callbackUri: `${process.env.BASE_URL}/oauth/google/callback`,
+  });
 
-const facebookOAuth2Options = {
-    name: 'FacebookOAuth2',
-    scope: ['email', 'public_profile'],
+  // register facebook oauth
+  app.register(oauthPlugin, {
+    name: 'facebookOAuth2',
+    scope: ['public_profile', 'email'],
     credentials: {
-        client: {
-            id: process.env.FACEBOOK_CLIENT_ID,
-            secret: process.env.FACEBOOK_CLIENT_SECRET,
-        },
-        auth: OAuth2.FACEBOOK_CONFIGURATION,
+      client: {
+        id: process.env.FACEBOOK_CLIENT_ID,
+        secret: process.env.FACEBOOK_CLIENT_SECRET,
+      },
+      auth: oauthPlugin.FACEBOOK_CONFIGURATION,
     },
-    startRedirectPath: '/oauth2/facebook',
-    callbackUri: 'http://localhost:8000/oauth2/facebook/callback',
-};
+    startRedirectPath: '/oauth/facebook',
+    callbackUri: `${process.env.BASE_URL}/oauth/google/callback`,
+  });
 
-export function registerGoogleOAuth2Provider(app: FastifyInstance) {
-    app.register(OAuth2, googleOAuth2Options);
-}
+  app.get('/oauth/google/callback', async function (req, res) {
+    const { token } =
+      await app.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(req);
 
-export function registerFacebookOAuth2Provider(app: FastifyInstance) {
-    app.register(OAuth2, facebookOAuth2Options);
-}
-
-export default async (app: FastifyInstance) => {
-
-    app.get('/oauth2/google/callback',async function (request: FastifyRequest, reply: FastifyReply) {
-        const { token } = await app.GoogleOAuth2.getAccessTokenFromAuthorizationCodeFlow(request);
-
-        const fetch = await import('node-fetch');
-
-        const userInfoResponse = await fetch.default('https://www.googleapis.com/oauth2/v2/userinfo', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token.access_token}`,
-            },
-        });
-
-        if (!userInfoResponse.ok) {
-            reply.code(500).send({ error: 'Failed to fetch user information from Google.' });
-            return;
-        }
-
-        reply.redirect('http://localhost:4000/?access_token=' + token.access_token);
+    // get account details
+    const {
+      data: { id: providerId, email, verified_email, name, picture },
+    } = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${token.access_token}` },
     });
 
-    app.get('/oauth2/facebook/callback', async function (request: FastifyRequest, reply: FastifyReply) {
-        const { token } = await app.FacebookOAuth2.getAccessTokenFromAuthorizationCodeFlow(request);
+    // email must be verified
+    if (!verified_email) {
+      return res
+        .code(403)
+        .send({ message: 'Email is not verified. Please verify email' });
+    }
 
-        const fetch = await import('node-fetch');
+    const user = await User.findOne({ email });
+    // user with same email doesn't exist => create new user
+    if (!user) {
+      const newUser = await User.create({
+        provider: Provider.Google,
+        providerId,
+        email,
+        isVerified: true,
+        name,
+        profileImage: picture,
+      });
 
-        const userInfoResponse = await fetch.default('https://graph.facebook.com/me?fields=id,name,email', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token.access_token}`,
-            },
-        });
+      return res.code(201).send({
+        jwt: createJwt({ id: newUser.id, type: JwtType.User }),
+        userId: newUser.id,
+      });
+    }
 
-        if (!userInfoResponse.ok) {
-            reply.code(500).send({ error: 'Failed to fetch user information from Facebook.' });
-            return;
-        }
+    // user with same email exists with other provider
+    if (user.provider !== Provider.Google) {
+      return res.send(409).send({
+        message:
+          'User with same email already exists with a different provider',
+      });
+    }
 
-        reply.redirect('http://localhost:4000/?access_token=' + token.access_token);
+    // user with same email exists with google => log user in (respond with jwt)
+    return res.send({
+      jwt: createJwt({ id: user.id, type: JwtType.User }),
+      userId: user.id,
     });
+  });
 
+  app.get('/oauth/facebook/callback', async function (req, res) {
+    const { token } =
+      await app.facebookOAuth2.getAccessTokenFromAuthorizationCodeFlow(req);
+
+    res.send(token);
+  });
 };
+
+export default plugin;

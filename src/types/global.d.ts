@@ -1,7 +1,12 @@
-import { FastifyRequest } from 'fastify';
+import { FastifyRequest, FastifyInstance } from 'fastify';
+import { OAuth2Namespace } from '@fastify/oauth2';
 
 declare module 'fastify' {
   interface FastifyRequest {
     user?: any; // Extend with your custom properties
+  }
+  interface FastifyInstance {
+    googleOAuth2: OAuth2Namespace;
+    facebookOAuth2: OAuth2Namespace;
   }
 }
