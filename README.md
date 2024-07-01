@@ -25,3 +25,13 @@
 3. Run server (defaults to http://localhost:4000)
     - With type checking `npm run tdev`
     - Without type checking `npm run dev`
+
+### Endpoints
+- Auth
+  - POST /auth/login, /auth/sign-up, /auth/verify-email, /auth/request-reset-password, /auth/reset-password
+- OAuth
+  - GET /oauth/google/redirect, /oauth/facebook/redirect
+  - POST /oauth/google/callback, /oauth/facebook/callback
+- Plans
+  - GET, POST /plans
+  - PUT, DELETE /plans/:id
