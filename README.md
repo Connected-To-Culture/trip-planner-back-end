@@ -1,8 +1,8 @@
 # Trip Planner Backend
 
 ### Developing locally -
-1. Install npm packages - `npm i`
-2. Set env variables -
+1. Install npm packages `npm i`
+2. Set env variables
     ```
     NODE_ENV development
     
