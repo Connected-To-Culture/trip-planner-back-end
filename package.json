@@ -1,16 +1,15 @@
 {
-  "name": "fastify-backend",
+  "name": "trip-planner-back-end",
   "version": "1.0.0",
-  "main": "dist/app.js",
+  "main": "./dist/app.js",
   "private": true,
   "scripts": {
+    "prepare": "ts-patch install -s",
     "build": "tsc",
-    "backend": "cross-env NODE_ENV=development ts-node-dev -r tsconfig-paths/register --respawn --transpile-only --rs --inspect=0.0.0.0:9229 src/app.ts",
-    "predev": "cross-env NODE_ENV=development ts-node src/bootstrap.ts",
-    "dev": "npm run predev && npm run backend",
-    "start": "node ./dist/src/bootstrap.js && node ./dist/src/app.js",
-    "lint": "eslint \"./src/**/*.{ts,js,json}\" --fix",
-    "test": "npm run lint"
+    "start": "node ./dist/app.js",
+    "dev": "ts-node-dev -r tsconfig-paths/register --respawn --rs --inspect=9229 --transpile-only ./src/app.ts",
+    "tdev": "ts-node-dev -r tsconfig-paths/register --respawn --rs --inspect=9229 --files ./src/app.ts",
+    "lint": "eslint \"./src/**/*.{ts,js,json}\" --fix"
   },
   "repository": {
     "type": "git",
@@ -20,7 +19,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.11.30",
-    "@types/nodemailer": "^6.4.8",
+    "@types/nodemailer": "^6.4.15",
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",
     "cross-env": "^7.0.3",
@@ -28,9 +27,14 @@
     "eslint-import-resolver-typescript": "^3.5.2",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-promise": "^6.1.1",
+    "prettier": "^3.3.2",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "ts-patch": "^3.2.1",
+    "tsconfig-paths": "^4.2.0",
     "tsx": "^4.7.1",
-    "typescript": "^5.4.3"
+    "typescript": "^5.4.3",
+    "typescript-transform-paths": "^3.4.7"
   },
   "dependencies": {
     "@fastify/autoload": "^5.7.0",
@@ -38,15 +42,17 @@
     "@fastify/formbody": "^7.4.0",
     "@fastify/helmet": "^11.1.1",
     "@fastify/oauth2": "^7.8.0",
+    "axios": "^1.7.2",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.3.1",
     "fastify": "^4.26.2",
+    "fastify-type-provider-zod": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.4.0",
     "mongoose": "^8.2.1",
-    "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.12",
     "pino": "^8.8.0",
-    "pino-pretty": "^10.0.0"
+    "pino-pretty": "^10.0.0",
+    "zod": "^3.23.8"
   }
 }

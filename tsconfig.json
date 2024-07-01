@@ -9,20 +9,28 @@
     "esModuleInterop": true,
     "allowJs": true,
     "outDir": "./dist",
-    "baseUrl": "./src",
     "lib": ["es2020.string", "esnext.asynciterable"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "noImplicitOverride": true,
     "paths": {
-      "~/*": ["*"],
-      "@data/*": ["data/*"],
-      "@db": ["utils/db.ts"]
-    }
+      "~/*": ["./src/*"],
+    },
+    "plugins": [
+      /* Transform paths in output .js files */
+      {
+        "transform": "typescript-transform-paths"
+      },
+      /* Transform paths in output .d.ts files */
+      {
+        "transform": "typescript-transform-paths",
+        "afterDeclarations": true
+      }
+    ]
   },
   "include": [
-    "src/**/*.ts"
-, "src/dBconfig/MongoDb.js"  ],
+    "src/**/*.ts",
+  ],
   "exclude": [
     "dist",
     "node_modules"
