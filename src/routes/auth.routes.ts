@@ -132,7 +132,10 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, res) => {
       const { email } = req.body;
-      const isUserRegistered = await User.exists({ provider: Provider.Standard, email });
+      const isUserRegistered = await User.exists({
+        provider: Provider.Standard,
+        email,
+      });
       if (isUserRegistered) {
         // send email with link containing jwt => click link => call separate endpoint reset password using that jwt
         const jwt = createJwt({ email, type: JwtType.ResetPassword });

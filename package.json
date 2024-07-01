@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node ./dist/app.js",
     "dev": "ts-node-dev -r tsconfig-paths/register --respawn --rs --transpile-only --inspect=9229 ./src/app.ts",
+    "tdev": "ts-node-dev -r tsconfig-paths/register --respawn --rs --files --inspect=9229 ./src/app.ts",
     "lint": "eslint \"./src/**/*.{ts,js,json}\" --fix"
   },
   "repository": {
