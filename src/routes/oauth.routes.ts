@@ -3,8 +3,6 @@ import * as process from 'process';
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import axios from 'axios';
 import { User } from '~/models/user.models';
-import { hash } from 'bcryptjs';
-import { DUPLICATE_KEY_ERROR } from '~/constants';
 import { JwtType, Provider } from '~/types/enums.types';
 import { createJwt } from '~/utils/auth.utils';
 

@@ -6,7 +6,6 @@ import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { verifyJwt } from '~/hooks/auth.hooks';
 import { JwtType, Provider } from '~/types/enums.types';
 import bcryptjs from 'bcryptjs';
-import { DUPLICATE_KEY_ERROR } from '~/constants';
 import { createJwt } from '~/utils/auth.utils';
 
 // util
