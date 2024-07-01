@@ -7,8 +7,8 @@
     "prepare": "ts-patch install -s",
     "build": "tsc",
     "start": "node ./dist/app.js",
-    "dev": "ts-node-dev -r tsconfig-paths/register --respawn --rs --transpile-only --inspect=9229 ./src/app.ts",
-    "tdev": "ts-node-dev -r tsconfig-paths/register --respawn --rs --files --inspect=9229 ./src/app.ts",
+    "dev": "ts-node-dev -r tsconfig-paths/register --respawn --rs --inspect=9229 --transpile-only ./src/app.ts",
+    "tdev": "ts-node-dev -r tsconfig-paths/register --respawn --rs --inspect=9229 --files ./src/app.ts",
     "lint": "eslint \"./src/**/*.{ts,js,json}\" --fix"
   },
   "repository": {

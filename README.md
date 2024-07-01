@@ -1,21 +1,27 @@
-# TypeScript Fastify
+# Trip Planner Backend
 
-To start locally for development:
-
-```
-npm run dev
-```
-
-The app runs at `http://localhost:4000`.
-
-To build:
-
-```
-npm run build
-```
-
-To start after building:
-
-```
-npm start
-```
+### Developing locally -
+1. Install npm packages - `npm i`
+2. Set env variables -
+    ```
+    NODE_ENV development
+    
+    MONGODB_URL mongodb://localhost:27017/trip-planner
+    BASE_URL http://localhost:4000
+    FRONTEND_BASE_URL http://localhost:8081
+    
+    # Get from team
+    GOOGLE_CLIENT_ID 
+    GOOGLE_CLIENT_SECRET 
+    FACEBOOK_CLIENT_ID 
+    FACEBOOK_CLIENT_SECRET 
+    
+    # Make email account with ethereal
+    EMAIL_HOST smtp.ethereal.email
+    EMAIL_PORT 587
+    EMAIL_USER <username>
+    EMAIL_PASS <password>
+    ```
+3. Run server (defaults to http://localhost:4000)
+    - With type checking `npm run tdev`
+    - Without type checking `npm run dev`
