@@ -31,7 +31,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       // get user with given email
       const user = await User.findOne({
         email,
-      }).select('_id password');
+      }).select('_id password provider');
       // user with same email doesn't exist
       if (!user) {
         return res.status(401).send({ message: 'Incorrect email' });
@@ -77,6 +77,8 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       // user with same email doesn't exist => create new user
       if (!user) {
         const newUser = await User.create({
+          provider: Provider.Standard,
+          providerId: email,
           email,
           password: await hash(password),
         });
@@ -130,14 +132,14 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, res) => {
       const { email } = req.body;
-      const isUserRegistered = await User.exists({ email });
+      const isUserRegistered = await User.exists({ provider: Provider.Standard, email });
       if (isUserRegistered) {
-        // send email with link containing jwt => click link => call separate endpoint to verify email using that jwt
+        // send email with link containing jwt => click link => call separate endpoint reset password using that jwt
         const jwt = createJwt({ email, type: JwtType.ResetPassword });
         sendEmail(
           email,
           'Trip Planner - Reset Password',
-          `<p>Click <a href="${process.env.FRONTEND_BASE_URL}/auth/reset-password?jwt=${jwt}">here</a> to verify your email</p>`,
+          `<p>Click <a href="${process.env.FRONTEND_BASE_URL}/auth/reset-password?jwt=${jwt}">here</a> to reset your password</p>`,
         );
       }
 
@@ -162,7 +164,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       const { password } = req.body;
 
       const { _id: userId } = await User.findOneAndUpdate(
-        { email },
+        { provider: Provider.Standard, email },
         { password: await hash(password) },
       ).select('_id');
 
