@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
+    default: null,
   },
   isVerified: {
     type: Boolean,
@@ -25,9 +26,23 @@ const userSchema = new mongoose.Schema({
   },
   name: {
     type: String,
+    default: null,
   },
   picture: {
     type: String,
+    default: null,
+  },
+  gender: {
+    type: String,
+    default: null,
+  },
+  dob: {
+    type: Date,
+    default: null,
+  },
+  zipcode: {
+    type: String,
+    default: null,
   },
 });
 

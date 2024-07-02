@@ -2,7 +2,7 @@ import { Plan } from '~/models/plan.models';
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { verifyJwt } from '~/hooks/auth.hooks';
 import z from 'zod';
-import { mongoIdSchema } from '~/schemas';
+import { mongoIdSchema, allNullable } from '~/schemas';
 
 const plugin: FastifyPluginAsyncZod = async (app) => {
   app.addHook('preHandler', verifyJwt() as any);
@@ -20,13 +20,17 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
         .refine((val) => new Date(val) >= new Date(), {
           message: 'startDate must be >= current date',
         })
-        .optional(),
-      endDate: z.coerce.date().optional(),
-      travellerCount: z.number().int().min(1).optional(),
+        .nullable(),
+      endDate: z.coerce.date().nullable(),
+      travellerCount: z.number().int().min(1).nullable(),
     })
-    .refine((data) => data.endDate >= data.startDate, {
-      message: 'endDate must be >= startDate',
-    });
+    .refine(
+      (data) =>
+        data.startDate && data.endDate ? data.endDate >= data.startDate : true,
+      {
+        message: 'endDate must be >= startDate',
+      },
+    );
 
   app.post(
     '/plans',
@@ -34,12 +38,15 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       schema: { body: planSchema },
     },
     async (req, res) => {
-      const plan = await Plan.create({ ...req.body, userId: req.user.id });
+      const plan = await Plan.create({
+        ...req.body,
+        userId: req.user.id,
+      });
       res.send(plan);
     },
   );
 
-  app.put(
+  app.patch(
     '/plans/:id',
     {
       schema: {

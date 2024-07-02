@@ -2,15 +2,21 @@ import mongoose from 'mongoose';
 
 // Schema definition
 const planSchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  name: {
+    type: String,
+    required: true,
+  },
   startDate: {
     type: Date,
+    default: null,
   },
   endDate: {
     type: Date,
+    default: null,
   },
   travellerCount: {
     type: Number,
+    default: null,
   },
   totalCost: {
     type: Number,
