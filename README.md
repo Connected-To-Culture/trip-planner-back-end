@@ -33,7 +33,7 @@
   - GET /oauth/google/redirect, /oauth/facebook/redirect
   - POST /oauth/google/callback, /oauth/facebook/callback
 - Plans
-  - GET, POST users/me/plans
+  - GET, POST /users/me/plans
   - PATCH, DELETE /plans/:id
 - Users
   - GET, PATCH /users/me
