@@ -7,13 +7,13 @@ import { User } from '~/models/user.models';
 const plugin: FastifyPluginAsyncZod = async (app) => {
   app.addHook('preHandler', verifyJwt() as any);
 
-  app.get('/users', async (req, res) => {
+  app.get('/users/me', async (req, res) => {
     const user = await User.findById(req.user.id).select('-password');
     res.send(user);
   });
 
   app.patch(
-    '/users',
+    '/users/me',
     {
       schema: {
         body: allNullable(

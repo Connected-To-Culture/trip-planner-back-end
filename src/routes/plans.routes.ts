@@ -7,7 +7,7 @@ import { mongoIdSchema, allNullable } from '~/schemas';
 const plugin: FastifyPluginAsyncZod = async (app) => {
   app.addHook('preHandler', verifyJwt() as any);
 
-  app.get('/plans', async (req, res) => {
+  app.get('/users/me/plans', async (req, res) => {
     const plans = await Plan.find({ userId: req.user.id });
     res.send(plans);
   });
@@ -33,7 +33,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     );
 
   app.post(
-    '/plans',
+    '/users/me/plans',
     {
       schema: {
         body: planSchema,
