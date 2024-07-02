@@ -35,7 +35,9 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/plans',
     {
-      schema: { body: planSchema },
+      schema: {
+        body: planSchema,
+      },
     },
     async (req, res) => {
       const plan = await Plan.create({
@@ -61,7 +63,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       const userId = req.user.id;
 
       const plan = await Plan.findByIdAndUpdate(
-        { _id: planId, userId: userId },
+        { _id: planId, userId },
         { ...req.body },
         { returnDocument: 'after' },
       );
