@@ -34,4 +34,6 @@
   - POST /oauth/google/callback, /oauth/facebook/callback
 - Plans
   - GET, POST /plans
-  - PUT, DELETE /plans/:id
+  - PATCH, DELETE /plans/:id
+- Users
+  - GET, PATCH /users

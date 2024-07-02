@@ -33,7 +33,6 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req, res) => {
-      console.log(req.body.dob);
       const user = await User.findByIdAndUpdate(
         req.user.id,
         { ...req.body },
