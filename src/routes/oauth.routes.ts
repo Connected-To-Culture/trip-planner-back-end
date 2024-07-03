@@ -6,13 +6,65 @@ import { User } from '~/models/user.models';
 import { JwtType, Provider } from '~/types/enums.types';
 import { createJwt } from '~/utils/auth.utils';
 
-const plugin: FastifyPluginAsyncZod = async (app) => {
-  // redirect back to frontend after oauth callback
-  const loginUrl = `${process.env.FRONTEND_BASE_URL}/login`;
-  const homeUrl = `${process.env.FRONTEND_BASE_URL}/home`;
-  const addParamsToUrl = (url: string, params: any) =>
-    `${url}?${new URLSearchParams(params).toString()}`;
+// redirect back to frontend after oauth callback
+const loginUrl = `${process.env.FRONTEND_BASE_URL}/login`;
+const homeUrl = `${process.env.FRONTEND_BASE_URL}/home`;
+const addParamsToUrl = (url: string, params: any) =>
+  `${url}?${new URLSearchParams(params).toString()}`;
 
+// signup user if account doesn't already exist, else login
+const handleUserSignupOrLogin = async (
+  req,
+  res,
+  provider: Provider,
+  providerId: string,
+  email: string,
+  name: string,
+  picture: string,
+) => {
+  const user = await User.findOne({ email });
+  // user with same email doesn't exist => create new user => log them in
+  if (!user) {
+    const newUser = await User.create({
+      provider: Provider.Google,
+      providerId,
+      email,
+      isVerified: true,
+      name,
+      picture,
+    });
+
+    return res.redirect(
+      addParamsToUrl(homeUrl, {
+        statusCode: '201',
+        jwt: createJwt({ id: newUser.id, type: JwtType.User }),
+        userId: newUser.id,
+      }),
+    );
+  }
+
+  // user with same email exists with other provider
+  if (user.provider !== provider) {
+    return res.redirect(
+      addParamsToUrl(loginUrl, {
+        statusCode: '409',
+        message:
+          'User with same email already exists with a different provider',
+      }),
+    );
+  }
+
+  // user with same email exists with given provider => log user in (respond with jwt)
+  return res.redirect(
+    addParamsToUrl(homeUrl, {
+      statusCode: '200',
+      jwt: createJwt({ id: user.id, type: JwtType.User }),
+      userId: user.id,
+    }),
+  );
+};
+
+const plugin: FastifyPluginAsyncZod = async (app) => {
   // register google oauth
   app.register(oauthPlugin, {
     name: 'googleOAuth2',
@@ -57,45 +109,15 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       );
     }
 
-    const user = await User.findOne({ email });
-    // user with same email doesn't exist => create new user => log them in
-    if (!user) {
-      const newUser = await User.create({
-        provider: Provider.Google,
-        providerId,
-        email,
-        isVerified: true,
-        name,
-        picture,
-      });
-
-      return res.redirect(
-        addParamsToUrl(homeUrl, {
-          statusCode: '201',
-          jwt: createJwt({ id: newUser.id, type: JwtType.User }),
-          userId: newUser.id,
-        }),
-      );
-    }
-
-    // user with same email exists with other provider
-    if (user.provider !== Provider.Google) {
-      return res.redirect(
-        addParamsToUrl(loginUrl, {
-          statusCode: '409',
-          message:
-            'User with same email already exists with a different provider',
-        }),
-      );
-    }
-
-    // user with same email exists with google => log user in (respond with jwt)
-    return res.redirect(
-      addParamsToUrl(homeUrl, {
-        statusCode: '200',
-        jwt: createJwt({ id: user.id, type: JwtType.User }),
-        userId: user.id,
-      }),
+    // signup user if account doesn't already exist, else login
+    await handleUserSignupOrLogin(
+      req,
+      res,
+      Provider.Google,
+      providerId,
+      email,
+      name,
+      picture,
     );
   });
 
@@ -128,68 +150,38 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     const { id: providerId, name, email } = data;
     const picture = data.picture?.data.url;
 
-    const user = await User.findOne({ email });
-    // user with same email doesn't exist => create new user => log them in
-    if (!user) {
-      const newUser = await User.create({
-        provider: Provider.Facebook,
-        providerId,
-        email,
-        isVerified: true,
-        name,
-        picture,
-      });
-
-      return res.redirect(
-        addParamsToUrl(homeUrl, {
-          statusCode: '201',
-          jwt: createJwt({ id: newUser.id, type: JwtType.User }),
-          userId: newUser.id,
-        }),
-      );
-    }
-
-    // user with same email exists with other provider
-    if (user.provider !== Provider.Facebook) {
-      return res.redirect(
-        addParamsToUrl(loginUrl, {
-          statusCode: '409',
-          message:
-            'User with same email already exists with a different provider',
-        }),
-      );
-    }
-
-    // user with same email exists with facebook => log user in (respond with jwt)
-    return res.redirect(
-      addParamsToUrl(homeUrl, {
-        statusCode: '200',
-        jwt: createJwt({ id: user.id, type: JwtType.User }),
-        userId: user.id,
-      }),
+    // signup user if account doesn't already exist, else login
+    await handleUserSignupOrLogin(
+      req,
+      res,
+      Provider.Facebook,
+      providerId,
+      email,
+      name,
+      picture,
     );
+  });
 
-    // register apple oauth
-    app.register(oauthPlugin, {
-      name: 'appleOAuth2',
-      credentials: {
-        client: {
-          id: process.env.APPLE_CLIENT_ID,
-          secret: process.env.APPLE_CLIENT_SECRET,
-        },
-        auth: oauthPlugin.APPLE_CONFIGURATION,
-        options: {
-          /**
-           * Based on offical Apple OAuth2 docs, an HTTP POST request is sent to the redirectURI for the `form_post` value.
-           * And the result of the authorization is stored in the body as application/x-www-form-urlencoded content type.
-           * See {@link https://developer.apple.com/documentation/sign_in_with_apple/request_an_authorization_to_the_sign_in_with_apple_server}
-           */
-          authorizationMethod: 'body',
-        },
+  // register apple oauth
+  app.register(oauthPlugin, {
+    name: 'appleOAuth2',
+    credentials: {
+      client: {
+        id: process.env.APPLE_CLIENT_ID,
+        secret: process.env.APPLE_CLIENT_SECRET,
       },
-      startRedirectPath: '/login/apple',
-      callbackUri: 'http://localhost:3000/login/apple/callback',
-    });
+      auth: oauthPlugin.APPLE_CONFIGURATION,
+      options: {
+        /**
+         * Based on offical Apple OAuth2 docs, an HTTP POST request is sent to the redirectURI for the `form_post` value.
+         * And the result of the authorization is stored in the body as application/x-www-form-urlencoded content type.
+         * See {@link https://developer.apple.com/documentation/sign_in_with_apple/request_an_authorization_to_the_sign_in_with_apple_server}
+         */
+        authorizationMethod: 'body',
+      },
+    },
+    startRedirectPath: '/login/apple',
+    callbackUri: 'http://localhost:3000/login/apple/callback',
   });
 };
 
