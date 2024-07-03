@@ -7,6 +7,11 @@ import { JwtType, Provider } from '~/types/enums.types';
 import { createJwt } from '~/utils/auth.utils';
 
 const plugin: FastifyPluginAsyncZod = async (app) => {
+  // redirect back to frontend after oauth callback
+  const redirectUrl = `${process.env.FRONTEND_BASE_URL}/oauth/callback`;
+  const addParamsToRedirectUrl = (params: any) =>
+    `${redirectUrl}?${new URLSearchParams(params).toString()}`;
+
   // register google oauth
   app.register(oauthPlugin, {
     name: 'googleOAuth2',
@@ -25,27 +30,16 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     callbackUri: `${process.env.BASE_URL}/oauth/google/callback`,
   });
 
-  // register facebook oauth
-  app.register(oauthPlugin, {
-    name: 'facebookOAuth2',
-    scope: ['public_profile', 'email'],
-    credentials: {
-      client: {
-        id: process.env.FACEBOOK_CLIENT_ID,
-        secret: process.env.FACEBOOK_CLIENT_SECRET,
-      },
-      auth: oauthPlugin.FACEBOOK_CONFIGURATION,
-    },
-    startRedirectPath: '/oauth/facebook/redirect',
-    callbackUri: `${process.env.BASE_URL}/oauth/facebook/callback`,
-  });
-
-  // redirect back to frontend after oauth callback
-  const redirectUrl = `${process.env.FRONTEND_BASE_URL}/oauth/callback`;
-  const addParamsToRedirectUrl = (params: any) =>
-    `${redirectUrl}?${new URLSearchParams(params).toString()}`;
-
   app.get('/oauth/google/callback', async function (req, res) {
+    const { error } = req.query as any;
+    if (error === 'access_denied') {
+      return res.redirect(
+        addParamsToRedirectUrl({
+          statusCode: '403',
+          message: 'You have cancelled the login process',
+        }),
+      );
+    }
     const { token } =
       await app.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(req);
 
@@ -106,6 +100,21 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
         userId: user.id,
       }),
     );
+  });
+
+  // register facebook oauth
+  app.register(oauthPlugin, {
+    name: 'facebookOAuth2',
+    scope: ['public_profile', 'email'],
+    credentials: {
+      client: {
+        id: process.env.FACEBOOK_CLIENT_ID,
+        secret: process.env.FACEBOOK_CLIENT_SECRET,
+      },
+      auth: oauthPlugin.FACEBOOK_CONFIGURATION,
+    },
+    startRedirectPath: '/oauth/facebook/redirect',
+    callbackUri: `${process.env.BASE_URL}/oauth/facebook/callback`,
   });
 
   app.get('/oauth/facebook/callback', async function (req, res) {
