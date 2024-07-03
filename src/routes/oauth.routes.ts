@@ -8,9 +8,10 @@ import { createJwt } from '~/utils/auth.utils';
 
 const plugin: FastifyPluginAsyncZod = async (app) => {
   // redirect back to frontend after oauth callback
-  const redirectUrl = `${process.env.FRONTEND_BASE_URL}/oauth/callback`;
-  const addParamsToRedirectUrl = (params: any) =>
-    `${redirectUrl}?${new URLSearchParams(params).toString()}`;
+  const loginUrl = `${process.env.FRONTEND_BASE_URL}/login`;
+  const homeUrl = `${process.env.FRONTEND_BASE_URL}/home`;
+  const addParamsToUrl = (url: string, params: any) =>
+    `${url}?${new URLSearchParams(params).toString()}`;
 
   // register google oauth
   app.register(oauthPlugin, {
@@ -31,14 +32,10 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
   });
 
   app.get('/oauth/google/callback', async function (req, res) {
+    // error being access_denied => user hit cancel => redirect to login
     const { error } = req.query as any;
     if (error === 'access_denied') {
-      return res.redirect(
-        addParamsToRedirectUrl({
-          statusCode: '403',
-          message: 'You have cancelled the login process',
-        }),
-      );
+      return res.redirect(loginUrl);
     }
     const { token } =
       await app.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(req);
@@ -53,7 +50,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     // email must be verified
     if (!verified_email) {
       return res.redirect(
-        addParamsToRedirectUrl({
+        addParamsToUrl(loginUrl, {
           statusCode: '403',
           message: 'Email is not verified. Please verify email',
         }),
@@ -73,7 +70,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       });
 
       return res.redirect(
-        addParamsToRedirectUrl({
+        addParamsToUrl(homeUrl, {
           statusCode: '201',
           jwt: createJwt({ id: newUser.id, type: JwtType.User }),
           userId: newUser.id,
@@ -84,7 +81,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     // user with same email exists with other provider
     if (user.provider !== Provider.Google) {
       return res.redirect(
-        addParamsToRedirectUrl({
+        addParamsToUrl(loginUrl, {
           statusCode: '409',
           message:
             'User with same email already exists with a different provider',
@@ -94,7 +91,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
 
     // user with same email exists with google => log user in (respond with jwt)
     return res.redirect(
-      addParamsToRedirectUrl({
+      addParamsToUrl(homeUrl, {
         statusCode: '200',
         jwt: createJwt({ id: user.id, type: JwtType.User }),
         userId: user.id,
@@ -144,7 +141,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       });
 
       return res.redirect(
-        addParamsToRedirectUrl({
+        addParamsToUrl(homeUrl, {
           statusCode: '201',
           jwt: createJwt({ id: newUser.id, type: JwtType.User }),
           userId: newUser.id,
@@ -155,7 +152,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     // user with same email exists with other provider
     if (user.provider !== Provider.Facebook) {
       return res.redirect(
-        addParamsToRedirectUrl({
+        addParamsToUrl(loginUrl, {
           statusCode: '409',
           message:
             'User with same email already exists with a different provider',
@@ -165,12 +162,34 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
 
     // user with same email exists with facebook => log user in (respond with jwt)
     return res.redirect(
-      addParamsToRedirectUrl({
+      addParamsToUrl(homeUrl, {
         statusCode: '200',
         jwt: createJwt({ id: user.id, type: JwtType.User }),
         userId: user.id,
       }),
     );
+
+    // register apple oauth
+    app.register(oauthPlugin, {
+      name: 'appleOAuth2',
+      credentials: {
+        client: {
+          id: process.env.APPLE_CLIENT_ID,
+          secret: process.env.APPLE_CLIENT_SECRET,
+        },
+        auth: oauthPlugin.APPLE_CONFIGURATION,
+        options: {
+          /**
+           * Based on offical Apple OAuth2 docs, an HTTP POST request is sent to the redirectURI for the `form_post` value.
+           * And the result of the authorization is stored in the body as application/x-www-form-urlencoded content type.
+           * See {@link https://developer.apple.com/documentation/sign_in_with_apple/request_an_authorization_to_the_sign_in_with_apple_server}
+           */
+          authorizationMethod: 'body',
+        },
+      },
+      startRedirectPath: '/login/apple',
+      callbackUri: 'http://localhost:3000/login/apple/callback',
+    });
   });
 };
 
