@@ -42,10 +42,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
 
   // redirect back to frontend after oauth callback
   const redirectUrl = `${process.env.FRONTEND_BASE_URL}/oauth/callback`;
-  interface URLSearchParamsInput {
-    [key: string]: string | string[];
-  }
-  const addParamsToRedirectUrl = (params: URLSearchParamsInput) =>
+  const addParamsToRedirectUrl = (params: any) =>
     `${redirectUrl}?${new URLSearchParams(params).toString()}`;
 
   app.get('/oauth/google/callback', async function (req, res) {

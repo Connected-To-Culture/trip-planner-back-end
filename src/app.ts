@@ -11,6 +11,7 @@ import {
   validatorCompiler,
 } from 'fastify-type-provider-zod';
 import { ZodError } from 'zod';
+import multipart from '@fastify/multipart';
 
 // init app
 const app = Fastify({
@@ -38,10 +39,18 @@ app.register(helmet, {
 app.register(Cors, {
   origin: '*',
 });
+const MAX_UPLOAD_SIZE_MB = 5;
+const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+app.register(multipart, {
+  limits: {
+    fileSize: MAX_UPLOAD_SIZE_BYTES,
+    files: 1,
+  },
+});
 
 // route plugins
 app.register(fastifyAutoload, {
-  dir: path.join(__dirname, 'routes'),
+  dir: path.join(import.meta.dirname, 'routes'),
   dirNameRoutePrefix: false,
 });
 
