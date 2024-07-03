@@ -2,7 +2,7 @@ import { Plan } from '~/models/plan.models';
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { verifyJwt } from '~/hooks/auth.hooks';
 import z from 'zod';
-import { mongoIdSchema, allNullable } from '~/schemas';
+import { mongoIdSchema, strSchema } from '~/schemas';
 
 const plugin: FastifyPluginAsyncZod = async (app) => {
   app.addHook('preHandler', verifyJwt() as any);
@@ -14,7 +14,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
 
   const planSchema = z
     .object({
-      name: z.string().min(1),
+      name: strSchema,
       startDate: z.coerce.date().refine((val) => new Date(val) >= new Date(), {
         message: 'startDate must be >= current date',
       }),

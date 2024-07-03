@@ -7,6 +7,7 @@ import { verifyJwt } from '~/hooks/auth.hooks';
 import { JwtType, Provider } from '~/types/enums.types';
 import bcryptjs from 'bcryptjs';
 import { createJwt } from '~/utils/auth.utils';
+import { strSchema } from '~/schemas';
 
 // util
 const hash = (s: string) => {
@@ -20,7 +21,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       schema: {
         body: z.object({
           email: z.string().email(),
-          password: z.string().min(1),
+          password: strSchema,
         }),
       },
     },
@@ -65,7 +66,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       schema: {
         body: z.object({
           email: z.string().email(),
-          password: z.string().min(1),
+          password: strSchema,
         }),
       },
     },
@@ -156,7 +157,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     {
       schema: {
         body: z.object({
-          password: z.string().min(1),
+          password: strSchema,
         }),
       },
       preHandler: verifyJwt(JwtType.ResetPassword),

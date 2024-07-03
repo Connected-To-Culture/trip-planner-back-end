@@ -1,7 +1,7 @@
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { verifyJwt } from '~/hooks/auth.hooks';
 import z from 'zod';
-import { allNullable } from '~/schemas';
+import { allNullable, strSchema } from '~/schemas';
 import { User } from '~/models/user.models';
 
 const plugin: FastifyPluginAsyncZod = async (app) => {
@@ -20,7 +20,7 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
           z
             .object({
               picture: z.string().url(),
-              name: z.string(),
+              name: strSchema,
               gender: z.enum(['Male', 'Female', 'Other']),
               dob: z.coerce.date().refine((val) => new Date(val) < new Date(), {
                 message: 'dob must be < current date',

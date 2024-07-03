@@ -4,6 +4,8 @@ export const mongoIdSchema = z.string().regex(/[0-9a-fA-F]{24}/, {
   message: 'id must be a 24 character hex string',
 });
 
+export const strSchema = z.string().trim().min(1);
+
 export const allNullable = <TSchema extends z.AnyZodObject>(
   schema: TSchema,
 ) => {
