@@ -8,15 +8,15 @@ const planSchema = new mongoose.Schema({
   },
   startDate: {
     type: Date,
-    default: null,
+    required: true,
   },
   endDate: {
     type: Date,
-    default: null,
+    required: true,
   },
   travellerCount: {
     type: Number,
-    default: null,
+    required: true,
   },
   totalCost: {
     type: Number,

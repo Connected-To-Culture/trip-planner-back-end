@@ -17,18 +17,20 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     {
       schema: {
         body: allNullable(
-          z.object({
-            picture: z.string().url(),
-            name: z.string(),
-            gender: z.enum(['Male', 'Female', 'Other']),
-            dob: z.coerce.date().refine((val) => new Date(val) < new Date(), {
-              message: 'dob must be < current date',
-            }),
-            zipcode: z.string().regex(/^\d{5}(-\d{4})?$/, {
-              message:
-                'ZIP code must be 5 digits or 5+4 digits (e.g., 12345 or 12345-6789).',
-            }),
-          }),
+          z
+            .object({
+              picture: z.string().url(),
+              name: z.string(),
+              gender: z.enum(['Male', 'Female', 'Other']),
+              dob: z.coerce.date().refine((val) => new Date(val) < new Date(), {
+                message: 'dob must be < current date',
+              }),
+              zipcode: z.string().regex(/^\d{5}(-\d{4})?$/, {
+                message:
+                  'ZIP code must be 5 digits or 5+4 digits (e.g., 12345 or 12345-6789).',
+              }),
+            })
+            .partial(),
         ),
       },
     },

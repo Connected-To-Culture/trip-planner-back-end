@@ -15,22 +15,15 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
   const planSchema = z
     .object({
       name: z.string().min(1),
-      startDate: z.coerce
-        .date()
-        .refine((val) => new Date(val) >= new Date(), {
-          message: 'startDate must be >= current date',
-        })
-        .nullable(),
-      endDate: z.coerce.date().nullable(),
-      travellerCount: z.number().int().min(1).nullable(),
+      startDate: z.coerce.date().refine((val) => new Date(val) >= new Date(), {
+        message: 'startDate must be >= current date',
+      }),
+      endDate: z.coerce.date(),
+      travellerCount: z.number().int().min(1),
     })
-    .refine(
-      (data) =>
-        data.startDate && data.endDate ? data.endDate >= data.startDate : true,
-      {
-        message: 'endDate must be >= startDate',
-      },
-    );
+    .refine((data) => data.endDate >= data.startDate, {
+      message: 'endDate must be >= startDate',
+    });
 
   app.post(
     '/users/me/plans',
