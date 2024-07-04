@@ -163,12 +163,20 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
   });
 
   // register apple oauth
+  const [CLIENT_ID, TEAM_ID, PRIVATE_KEY, KEY_ID] = [
+    process.env.APPLE_CLIENT_ID,
+    process.env.APPLE_TEAM_ID,
+    process.env.APPLE_PRIVATE_KEY,
+    process.env.APPLE_KEY_ID,
+  ];
+  const CLIENT_SECRET = generateClientSecret();
+
   app.register(oauthPlugin, {
     name: 'appleOAuth2',
     credentials: {
       client: {
         id: process.env.APPLE_CLIENT_ID,
-        secret: process.env.APPLE_CLIENT_SECRET,
+        secret: CLIENT_SECRET,
       },
       auth: oauthPlugin.APPLE_CONFIGURATION,
       options: {
@@ -180,8 +188,34 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
         authorizationMethod: 'body',
       },
     },
-    startRedirectPath: '/login/apple',
-    callbackUri: 'http://localhost:3000/login/apple/callback',
+    startRedirectPath: '/oauth/apple/callback',
+    callbackUri: `${process.env.BASE_URL}/oauth/apple/callback`,
+  });
+
+  app.get('/oauth/apple/callback', async function (req, res) {
+    const { token } =
+      await app.facebookOAuth2.getAccessTokenFromAuthorizationCodeFlow(req);
+
+    // get user data
+    const { data } = await axios.get(
+      'https://graph.facebook.com/me?fields=id,name,email,picture.type(large),verified',
+      {
+        headers: { Authorization: `Bearer ${token.access_token}` },
+      },
+    );
+    const { id: providerId, name, email } = data;
+    const picture = data.picture?.data.url;
+
+    // signup user if account doesn't already exist, else login
+    await handleUserSignupOrLogin(
+      req,
+      res,
+      Provider.Facebook,
+      providerId,
+      email,
+      name,
+      picture,
+    );
   });
 };
 
