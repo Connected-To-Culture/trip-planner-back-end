@@ -8,4 +8,5 @@ export enum Provider {
   Standard = 'standard',
   Google = 'google',
   Facebook = 'facebook',
+  Apple = 'apple',
 }

@@ -5,6 +5,8 @@ import axios from 'axios';
 import { User } from '~/models/user.models';
 import { JwtType, Provider } from '~/types/enums.types';
 import { createJwt } from '~/utils/auth.utils';
+import appleSignin from 'apple-signin-auth';
+import { FastifyRequest } from 'fastify';
 
 // redirect back to frontend after oauth callback
 const loginUrl = `${process.env.FRONTEND_BASE_URL}/login`;
@@ -163,20 +165,28 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
   });
 
   // register apple oauth
-  const [CLIENT_ID, TEAM_ID, PRIVATE_KEY, KEY_ID] = [
-    process.env.APPLE_CLIENT_ID,
-    process.env.APPLE_TEAM_ID,
-    process.env.APPLE_PRIVATE_KEY,
-    process.env.APPLE_KEY_ID,
-  ];
-  const CLIENT_SECRET = generateClientSecret();
+  const { APPLE_CLIENT_ID } = process.env;
+  const generateClientSecret = () => {
+    const EXPIRE_DAYS = 180; // (6 months => max expiry)
+    const EXPIRE_SECONDS = EXPIRE_DAYS * 24 * 60 * 60;
 
+    return appleSignin.getClientSecret({
+      clientID: APPLE_CLIENT_ID,
+      teamID: process.env.APPLE_TEAM_ID,
+      privateKey: process.env.APPLE_PRIVATE_KEY,
+      keyIdentifier: process.env.APPLE_KEY_ID,
+      expAfter: EXPIRE_SECONDS,
+    });
+  };
+  const APPLE_CLIENT_SECRET = generateClientSecret();
+
+  const CALLBACK_URI = `${process.env.BASE_URL}/oauth/apple/callback`;
   app.register(oauthPlugin, {
     name: 'appleOAuth2',
     credentials: {
       client: {
-        id: process.env.APPLE_CLIENT_ID,
-        secret: CLIENT_SECRET,
+        id: APPLE_CLIENT_ID,
+        secret: APPLE_CLIENT_SECRET,
       },
       auth: oauthPlugin.APPLE_CONFIGURATION,
       options: {
@@ -189,33 +199,52 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       },
     },
     startRedirectPath: '/oauth/apple/callback',
-    callbackUri: `${process.env.BASE_URL}/oauth/apple/callback`,
+    callbackUri: CALLBACK_URI,
   });
 
   app.get('/oauth/apple/callback', async function (req, res) {
-    const { token } =
-      await app.facebookOAuth2.getAccessTokenFromAuthorizationCodeFlow(req);
+    const { code, user } = req.query as any;
+    try {
+      let name = null;
+      if (user) {
+        const userData = JSON.parse(user);
+        name = `${userData.name.firstName} ${userData.name.lastName}`;
+      }
 
-    // get user data
-    const { data } = await axios.get(
-      'https://graph.facebook.com/me?fields=id,name,email,picture.type(large),verified',
-      {
-        headers: { Authorization: `Bearer ${token.access_token}` },
-      },
-    );
-    const { id: providerId, name, email } = data;
-    const picture = data.picture?.data.url;
+      const { id_token } = await appleSignin.getAuthorizationToken(code, {
+        clientID: APPLE_CLIENT_ID,
+        redirectUri: CALLBACK_URI,
+        clientSecret: APPLE_CLIENT_SECRET,
+      });
+      const {
+        email,
+        sub: providerId,
+        email_verified,
+      } = await appleSignin.verifyIdToken(id_token, APPLE_CLIENT_ID);
 
-    // signup user if account doesn't already exist, else login
-    await handleUserSignupOrLogin(
-      req,
-      res,
-      Provider.Facebook,
-      providerId,
-      email,
-      name,
-      picture,
-    );
+      if (!email_verified) {
+        return res.redirect(
+          addParamsToUrl(loginUrl, {
+            statusCode: '403',
+            message: 'Email is not verified. Please verify email',
+          }),
+        );
+      }
+
+      // signup user if account doesn't already exist, else login
+      await handleUserSignupOrLogin(
+        req,
+        res,
+        Provider.Apple,
+        providerId,
+        email,
+        name,
+        null,
+      );
+    } catch (err) {
+      app.log.error(err);
+      res.send(err);
+    }
   });
 };
 

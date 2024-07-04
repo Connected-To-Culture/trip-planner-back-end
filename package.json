@@ -46,6 +46,7 @@
     "@fastify/helmet": "^11.1.1",
     "@fastify/multipart": "^8.3.0",
     "@fastify/oauth2": "^7.8.0",
+    "apple-signin-auth": "^1.7.6",
     "axios": "^1.7.2",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.3.1",
