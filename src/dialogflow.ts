@@ -4,9 +4,9 @@ async function detectIntent(text: string, sessionId: string) {
     const client = new dialogflow.SessionsClient();
 
     const sessionPath = client.projectLocationAgentSessionPath(
-        'xenon-heading-384913',  // Project ID
-        'global',                // Location ID
-        'ca7596ae-6bd1-4edf-bdf4-246087df2096',  // Agent ID
+        process.env.DIALOGFLOW_PROJECT_ID,  // Project ID from .env
+        process.env.DIALOGFLOW_LOCATION_ID, // Location ID from .env
+        process.env.DIALOGFLOW_AGENT_ID,    // Agent ID from .env
         sessionId
     );
 
