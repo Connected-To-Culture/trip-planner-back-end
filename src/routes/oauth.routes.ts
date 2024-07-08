@@ -164,88 +164,88 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
     );
   });
 
-  // register apple oauth
-  const { APPLE_CLIENT_ID } = process.env;
-  const generateClientSecret = () => {
-    const EXPIRE_DAYS = 180; // (6 months => max expiry)
-    const EXPIRE_SECONDS = EXPIRE_DAYS * 24 * 60 * 60;
-
-    return appleSignin.getClientSecret({
-      clientID: APPLE_CLIENT_ID,
-      teamID: process.env.APPLE_TEAM_ID,
-      privateKey: process.env.APPLE_PRIVATE_KEY,
-      keyIdentifier: process.env.APPLE_KEY_ID,
-      expAfter: EXPIRE_SECONDS,
-    });
-  };
-  const APPLE_CLIENT_SECRET = generateClientSecret();
-
-  const CALLBACK_URI = `${process.env.BASE_URL}/oauth/apple/callback`;
-  app.register(oauthPlugin, {
-    name: 'appleOAuth2',
-    credentials: {
-      client: {
-        id: APPLE_CLIENT_ID,
-        secret: APPLE_CLIENT_SECRET,
-      },
-      auth: oauthPlugin.APPLE_CONFIGURATION,
-      options: {
-        /**
-         * Based on offical Apple OAuth2 docs, an HTTP POST request is sent to the redirectURI for the `form_post` value.
-         * And the result of the authorization is stored in the body as application/x-www-form-urlencoded content type.
-         * See {@link https://developer.apple.com/documentation/sign_in_with_apple/request_an_authorization_to_the_sign_in_with_apple_server}
-         */
-        authorizationMethod: 'body',
-      },
-    },
-    startRedirectPath: '/oauth/apple/callback',
-    callbackUri: CALLBACK_URI,
-  });
-
-  app.get('/oauth/apple/callback', async function (req, res) {
-    const { code, user } = req.query as any;
-    try {
-      let name = null;
-      if (user) {
-        const userData = JSON.parse(user);
-        name = `${userData.name.firstName} ${userData.name.lastName}`;
-      }
-
-      const { id_token } = await appleSignin.getAuthorizationToken(code, {
-        clientID: APPLE_CLIENT_ID,
-        redirectUri: CALLBACK_URI,
-        clientSecret: APPLE_CLIENT_SECRET,
-      });
-      const {
-        email,
-        sub: providerId,
-        email_verified,
-      } = await appleSignin.verifyIdToken(id_token, APPLE_CLIENT_ID);
-
-      if (!email_verified) {
-        return res.redirect(
-          addParamsToUrl(loginUrl, {
-            statusCode: '403',
-            message: 'Email is not verified. Please verify email',
-          }),
-        );
-      }
-
-      // signup user if account doesn't already exist, else login
-      await handleUserSignupOrLogin(
-        req,
-        res,
-        Provider.Apple,
-        providerId,
-        email,
-        name,
-        null,
-      );
-    } catch (err) {
-      app.log.error(err);
-      res.send(err);
-    }
-  });
-};
+//   // register apple oauth
+//   const { APPLE_CLIENT_ID } = process.env;
+//   const generateClientSecret = () => {
+//     const EXPIRE_DAYS = 180; // (6 months => max expiry)
+//     const EXPIRE_SECONDS = EXPIRE_DAYS * 24 * 60 * 60;
+//
+//     return appleSignin.getClientSecret({
+//       clientID: APPLE_CLIENT_ID,
+//       teamID: process.env.APPLE_TEAM_ID,
+//       privateKey: process.env.APPLE_PRIVATE_KEY,
+//       keyIdentifier: process.env.APPLE_KEY_ID,
+//       expAfter: EXPIRE_SECONDS,
+//     });
+//   };
+//   const APPLE_CLIENT_SECRET = generateClientSecret();
+//
+//   const CALLBACK_URI = `${process.env.BASE_URL}/oauth/apple/callback`;
+//   app.register(oauthPlugin, {
+//     name: 'appleOAuth2',
+//     credentials: {
+//       client: {
+//         id: APPLE_CLIENT_ID,
+//         secret: APPLE_CLIENT_SECRET,
+//       },
+//       auth: oauthPlugin.APPLE_CONFIGURATION,
+//       options: {
+//         /**
+//          * Based on offical Apple OAuth2 docs, an HTTP POST request is sent to the redirectURI for the `form_post` value.
+//          * And the result of the authorization is stored in the body as application/x-www-form-urlencoded content type.
+//          * See {@link https://developer.apple.com/documentation/sign_in_with_apple/request_an_authorization_to_the_sign_in_with_apple_server}
+//          */
+//         authorizationMethod: 'body',
+//       },
+//     },
+//     startRedirectPath: '/oauth/apple/callback',
+//     callbackUri: CALLBACK_URI,
+//   });
+//
+//   app.get('/oauth/apple/callback', async function (req, res) {
+//     const { code, user } = req.query as any;
+//     try {
+//       let name = null;
+//       if (user) {
+//         const userData = JSON.parse(user);
+//         name = `${userData.name.firstName} ${userData.name.lastName}`;
+//       }
+//
+//       const { id_token } = await appleSignin.getAuthorizationToken(code, {
+//         clientID: APPLE_CLIENT_ID,
+//         redirectUri: CALLBACK_URI,
+//         clientSecret: APPLE_CLIENT_SECRET,
+//       });
+//       const {
+//         email,
+//         sub: providerId,
+//         email_verified,
+//       } = await appleSignin.verifyIdToken(id_token, APPLE_CLIENT_ID);
+//
+//       if (!email_verified) {
+//         return res.redirect(
+//           addParamsToUrl(loginUrl, {
+//             statusCode: '403',
+//             message: 'Email is not verified. Please verify email',
+//           }),
+//         );
+//       }
+//
+//       // signup user if account doesn't already exist, else login
+//       await handleUserSignupOrLogin(
+//         req,
+//         res,
+//         Provider.Apple,
+//         providerId,
+//         email,
+//         name,
+//         null,
+//       );
+//     } catch (err) {
+//       app.log.error(err);
+//       res.send(err);
+//     }
+//   });
+// };
 
 export default plugin;
