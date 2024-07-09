@@ -10,7 +10,7 @@
     "allowJs": true,
     "outDir": "./dist",
     "baseUrl": "./src",
-    "lib": ["es2020.string", "esnext.asynciterable"],
+    "lib": ["es2020.string", "esnext.asynciterable","es2020","DOM"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "noImplicitOverride": true,

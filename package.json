@@ -39,6 +39,9 @@
     "@fastify/helmet": "^11.1.1",
     "@fastify/oauth2": "^7.8.0",
     "@google-cloud/dialogflow-cx": "^4.7.0",
+    "@langchain/community": "^0.2.17",
+    "@langchain/google-vertexai": "^0.0.19",
+    "@langchain/mongodb": "^0.0.4",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.3.1",
     "fastify": "^4.26.2",
@@ -49,6 +52,7 @@
     "nodemailer": "^6.9.12",
     "pino": "^8.8.0",
     "pino-pretty": "^10.0.0",
-    "protobufjs": "^7.3.0"
+    "protobufjs": "^7.3.0",
+    "web-streams-polyfill": "^4.0.0"
   }
 }
