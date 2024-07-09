@@ -10,6 +10,7 @@
     BASE_URL http://localhost:4000
     FRONTEND_BASE_URL http://localhost:8081
     
+    JWT_SECRET <generate-random-one>
     # Get from team
     GOOGLE_CLIENT_ID 
     GOOGLE_CLIENT_SECRET 
