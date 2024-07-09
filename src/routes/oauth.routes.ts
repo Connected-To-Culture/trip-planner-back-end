@@ -83,6 +83,10 @@ const plugin: FastifyPluginAsyncZod = async (app) => {
       prompt: 'select_account',
     },
     callbackUri: `${process.env.BASE_URL}/oauth/google/callback`,
+    checkStateFunction: (req, callback) => {
+      callback();
+    },
+    generateStateFunction: () => true,
   });
 
   app.get('/oauth/google/callback', async function (req, res) {
