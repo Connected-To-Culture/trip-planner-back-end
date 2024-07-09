@@ -28,13 +28,34 @@
     - Without type checking `npm run dev`
 
 ### Endpoints
-- Auth
-  - POST /auth/login, /auth/sign-up, /auth/verify-email, /auth/request-reset-password, /auth/reset-password
+- Auth 
+  - POST /auth/login
+    - Return jwt if details match existing user
+    - Body - { email: string, password: string }
+  - POST /auth/sign-up 
+    - Create user, send verification email
+    - Body - { email: string, password: string }
+  - POST /auth/verify-email - verification email links to frontend with jwt in querystring => frontend sends request here with jwt to make user verified 
+  - POST /auth/request-reset-password 
+    - Send password reset email out
+    - Body - { email: string }
+  - POST /auth/reset-password
+    - Password reset email links to frontend with jwt in querystring => frontend sends requests here with jwt to reset password
+    - Body - { password: string }
 - OAuth
-  - GET /oauth/google/redirect, /oauth/facebook/redirect
-  - POST /oauth/google/callback, /oauth/facebook/callback
+  - GET /oauth/google/redirect /oauth/facebook/redirect - Redirects user to google/facebook sign-in page
+  - POST /oauth/google/callback, /oauth/facebook/callback - Google/facebook automatically redirects here once user has signed in
 - Plans
-  - GET, POST /users/me/plans
-  - PATCH, DELETE /plans/:id
+  - GET /users/me/plans - get all the plans of the logged-in user
+  - POST /users/me/plans - 
+    - Create plan for the logged-in user
+    - Body - { name: string, startDate: date, endDate: date, travellerCount: number }
+  - PATCH /plans/:id - 
+    - Update plan with given id if it belongs to logged-in user
+    - Body - { name: string, startDate: date, endDate: date, travellerCount: number }
+  - DELETE /plans/:id - delete plan with given id if it belongs to logged-in user
 - Users
-  - GET, PATCH /users/me
+  - GET /users/me - get details of logged-in user
+  - PATCH /users/me
+    - Update details of logged-in user
+    - { picture?: string, name?: string, gender?: string, dob?: date, zipcode?: string }
